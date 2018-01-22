@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/start_page"
+    tools:context="com.example.andre.cchat.StartPageActivity">
+
+
+    <Button
+        android:id="@+id/punya_akun_button"
+        android:layout_width="320dp"
+        android:layout_height="50dp"
+        android:layout_above="@+id/butuh_akun_button"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="16dp"
+        android:background="@android:drawable/screen_background_light"
+        android:text="Sudah Punya Akun?"
+        android:textColor="@android:color/holo_blue_dark"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        tools:layout_height="50dp"
+        tools:layout_width="320dp" />
+
+    <Button
+        android:id="@+id/butuh_akun_button"
+        android:layout_width="320dp"
+        android:layout_height="50dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignStart="@+id/punya_akun_button"
+        android:layout_marginBottom="21dp"
+        android:background="@android:drawable/screen_background_light"
+        android:padding="10dp"
+        android:text="Butuh Akun Baru ?"
+        android:textColor="@android:color/holo_blue_dark"
+        android:textSize="20sp"
+        android:textStyle="bold" />
+
+
+</RelativeLayout>

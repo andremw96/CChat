@@ -16,6 +16,15 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".MainActivity" />
+        <activity android:name=".StartPageActivity" />
+        <activity
+            android:name=".LoginActivity"
+            android:parentActivityName=".StartPageActivity" />
+        <activity
+            android:name=".RegisterActivity"
+            android:parentActivityName=".StartPageActivity" />
+        <activity android:name=".SettingsActivity"></activity>
     </application>
 
 </manifest>

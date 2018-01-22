@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/login_page"
+    tools:context="com.example.andre.cchat.LoginActivity">
+
+    <include
+        layout="@layout/app_bar_layout"
+        android:id="@+id/login_toolbar" >
+    </include>
+
+    <EditText
+        android:id="@+id/login_email"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="234dp"
+        android:ems="10"
+        android:hint="Email..."
+        android:inputType="textMultiLine|textEmailAddress"
+        android:padding="20dp" />
+
+    <EditText
+        android:id="@+id/login_pwd"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@+id/login_email"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="73dp"
+        android:ems="10"
+        android:hint="Password..."
+        android:inputType="textMultiLine|textPassword"
+        android:padding="20dp" />
+
+    <Button
+        android:id="@+id/login_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="14dp"
+        android:background="@color/colorPrimary"
+        android:text="Sign In"
+        android:textAllCaps="false"
+        android:textColor="@android:color/background_light"
+        android:textSize="20sp"
+        android:textStyle="bold" />
+</RelativeLayout>
