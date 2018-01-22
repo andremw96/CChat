@@ -60,7 +60,7 @@
         android:layout_below="@+id/settings_ubah_foto_profil_button"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="10dp"
-        android:background="@android:color/holo_orange_light"
+        android:background="@android:color/holo_green_dark"
         android:text="Ubah Status"
         android:textColor="@android:color/background_light"
         android:textSize="18sp" />
