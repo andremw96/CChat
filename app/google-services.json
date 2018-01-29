@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "878504246329",
+    "firebase_url": "https://cchat-9bddb.firebaseio.com",
+    "project_id": "cchat-9bddb",
+    "storage_bucket": "cchat-9bddb.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:878504246329:android:ae047d9271662ed5",
+        "android_client_info": {
+          "package_name": "com.example.andre.cchat"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "878504246329-9h9td8kn1rnp9fdvvm99c85095t9ad0t.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.andre.cchat",
+            "certificate_hash": "fbcd484ee62cd90222b09a3313270287164fb825"
+          }
+        },
+        {
+          "client_id": "878504246329-onldsihhq7e5nllnu1osmvmimvl20ng5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBIlf7y9wfCmrajnKPqK1eCcY4XP7wCPK0"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "878504246329-onldsihhq7e5nllnu1osmvmimvl20ng5.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
