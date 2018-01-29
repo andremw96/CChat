@@ -66,7 +66,7 @@ public class AllUsersActivity extends AppCompatActivity {
         {
             @Override
             // digunakan untuk set values for recycler view
-            protected void populateViewHolder(AllUsersViewHolder viewHolder, AllUsers model, final int position)
+            protected void populateViewHolder(AllUsersViewHolder viewHolder, final AllUsers model, final int position)
             {
                 // mode.getusername itu buat ngambi data username dari firebase
                 viewHolder.setUser_name(model.getUser_name());
@@ -80,9 +80,11 @@ public class AllUsersActivity extends AppCompatActivity {
                         // kita butuh ID untuk membuka profie activity seseorang, disini akan menggunakan parameter position
                         // getKey akan mengambil unique ID
                         String visit_user_id = getRef(position).getKey();
+                        String user_name = model.getUser_name();
 
                         Intent profileIntent = new Intent(AllUsersActivity.this, ProfileActivity.class);
                         profileIntent.putExtra("visit_user_id", visit_user_id);
+                        profileIntent.putExtra("user_name", user_name);
                         startActivity(profileIntent);
                     }
                 });

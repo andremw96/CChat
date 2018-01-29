@@ -7,6 +7,7 @@ import android.media.Image;
 import android.net.Uri;
 import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -31,6 +32,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
 import com.google.firebase.database.ServerValue;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
@@ -66,6 +68,7 @@ public class ChatActivity extends AppCompatActivity {
     private EditText inputMessageText;
 
     private DatabaseReference rootRef;
+    private DatabaseReference notificationsReference;
 
     private FirebaseAuth mAuth;
     private String messageSenderID;
@@ -83,6 +86,7 @@ public class ChatActivity extends AppCompatActivity {
 
     private ProgressDialog loadingBar;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -90,11 +94,16 @@ public class ChatActivity extends AppCompatActivity {
 
         rootRef = FirebaseDatabase.getInstance().getReference();
 
+        notificationsReference = FirebaseDatabase.getInstance().getReference().child("Notifications_Message");
+        notificationsReference.keepSynced(true);
+
         mAuth = FirebaseAuth.getInstance();
         messageSenderID = mAuth.getCurrentUser().getUid();
 
-        messageReceiverId = getIntent().getExtras().get("visit_user_id").toString();
-        messageReceiverName = getIntent().getExtras().get("user_name").toString();
+        if ( (getIntent().getExtras().get("visit_user_id").toString() != null) && (getIntent().getExtras().get("user_name").toString() != null)) {
+            messageReceiverId = getIntent().getExtras().get("visit_user_id").toString();
+            messageReceiverName = getIntent().getExtras().get("user_name").toString();
+        }
 
         MessageImageStorageRef = FirebaseStorage.getInstance().getReference().child("Messages_Pictures");
 
@@ -131,8 +140,6 @@ public class ChatActivity extends AppCompatActivity {
         userMessagesList.setLayoutManager(linearLayoutManager);
 
         userMessagesList.setAdapter(messageAdapter);
-
-        FetchMessages();
 
 
         // setting username, dll di custom bar layout sesuai dgn profil orang yg dipilih user
@@ -250,6 +257,7 @@ public class ChatActivity extends AppCompatActivity {
             }
         });
 
+        FetchMessages();
 
     }
 
@@ -333,6 +341,12 @@ public class ChatActivity extends AppCompatActivity {
 
     private void FetchMessages()
     {
+        //DatabaseReference messageRef = rootRef.child("Messages").child(messageSenderID).child(messageReceiverId);
+
+        // pertama akan load 10 pesan
+        // terus jika di refresh oleh user maka mcurrent page berubah jadi 2 di oncreate, maka pesan jadi 20
+       // Query messageQuery = messageRef.limitToLast(mCurrentPage * TOTAL_ITEMS_TO_LOAD);
+
         rootRef.child("Messages").child(messageSenderID).child(messageReceiverId)
                 .addChildEventListener(new ChildEventListener() {
                     @Override
@@ -341,8 +355,12 @@ public class ChatActivity extends AppCompatActivity {
                         Messages messages = dataSnapshot.getValue(Messages.class);
 
                         messageList.add(messages);
-
                         messageAdapter.notifyDataSetChanged();
+
+                        // ketika fetchmessage, halaman page lgsg ke paling bawah alias pesan terakhir
+                        userMessagesList.scrollToPosition(messageList.size() - 1);
+
+                       // mRefreshLayoutList.setRefreshing(false);
                     }
 
                     @Override
@@ -403,16 +421,26 @@ public class ChatActivity extends AppCompatActivity {
             rootRef.child("Chat").child(messageReceiverId).child(messageSenderID).child("seen").setValue(false);
             rootRef.child("Chat").child(messageReceiverId).child(messageSenderID).child("timestamp").setValue(ServerValue.TIMESTAMP);
 
+            // menyimpan data notifikasi ke firebase
+            HashMap<String, String> notificationsData = new HashMap<String, String>();
+            notificationsData.put("from", messageSenderID);
+            notificationsData.put("type", "sent_message");
+            notificationsData.put("isi_pesan", messageText);
+            notificationsReference.child(messageReceiverId).push().setValue(notificationsData);
+
+            inputMessageText.setText("");
+
             rootRef.updateChildren(messageBodyDetails, new DatabaseReference.CompletionListener() {
                 @Override
                 public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference)
                 {
                     if(databaseError != null)
                     {
+
                         Log.d("Chat_Log", databaseError.getMessage().toString());
+
                     }
 
-                    inputMessageText.setText("");
                 }
             });
         }

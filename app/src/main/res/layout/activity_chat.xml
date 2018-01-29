@@ -11,14 +11,18 @@
         android:id="@+id/chat_bar_layout"
         layout="@layout/app_bar_layout"></include>
 
+
+
     <android.support.v7.widget.RecyclerView
-        android:id="@+id/chat_message_list_user"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_above="@+id/linearLayout"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentStart="true"
-        android:layout_below="@+id/chat_bar_layout"></android.support.v7.widget.RecyclerView>
+            android:id="@+id/chat_message_list_user"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_above="@+id/linearLayout"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentStart="true"
+            android:layout_below="@+id/chat_bar_layout">
+    </android.support.v7.widget.RecyclerView>
+
 
 
     <LinearLayout
@@ -36,7 +40,8 @@
             android:layout_width="50dp"
             android:layout_height="wrap_content"
             android:padding="5dp"
-            android:src="@drawable/ic_select_image_to_send" />
+            android:src="@drawable/ic_select_image_to_send"
+            android:visibility="gone" />
 
         <EditText
             android:id="@+id/chat_input_message"

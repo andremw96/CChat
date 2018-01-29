@@ -4,6 +4,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.support.v4.app.NotificationCompat;
+import android.util.Log;
 
 import com.google.firebase.messaging.RemoteMessage;
 
@@ -20,11 +21,15 @@ public class FirebaseMessagingService extends com.google.firebase.messaging.Fire
         super.onMessageReceived(remoteMessage);
 
         // ngambil dari node.js
-        String notification_title = remoteMessage.getNotification().getTitle();
-        String notification_body = remoteMessage.getNotification().getBody();
+       // String notification_title = remoteMessage.getNotification().getTitle();
+      //  String notification_body = remoteMessage.getNotification().getBody();
 
-        String click_action = remoteMessage.getNotification().getClickAction();
+        // String click_action = remoteMessage.getNotification().getClickAction();
         String from_sender_id = remoteMessage.getData().get("from_user_id").toString();
+        String from_user_name = remoteMessage.getData().get("from_user_name").toString();
+        String click_action = remoteMessage.getData().get("click_action").toString();
+        String notification_title = remoteMessage.getData().get("title").toString();
+        String notification_body = remoteMessage.getData().get("body").toString();
 
 
         NotificationCompat.Builder mBuilder =
@@ -35,6 +40,9 @@ public class FirebaseMessagingService extends com.google.firebase.messaging.Fire
 
         Intent resultIntent = new Intent(click_action);
         resultIntent.putExtra("visit_user_id", from_sender_id);
+        resultIntent.putExtra("user_name", from_user_name);
+        Log.d("visit_user_id", from_sender_id);
+        Log.d("user_name", from_user_name);
 
         // Because clicking the notification opens a new ("special") activity, there's
         // no need to create an artificial back stack.

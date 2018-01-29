@@ -2,6 +2,7 @@ package com.example.andre.cchat;
 
 import android.graphics.Color;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -78,6 +79,7 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.Messag
             }
         });
 
+        Log.d("tipe pesan", fromMessageType);
         if(fromMessageType.equals("text"))
         {
             holder.messagePicture.setVisibility(View.INVISIBLE);
@@ -89,12 +91,17 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.Messag
                 holder.messageText.setBackgroundResource(R.drawable.message_text_background_two);
                 holder.messageText.setTextColor(Color.BLACK);
                 holder.messageText.setGravity(Gravity.RIGHT);
+
+             //  holder.userProfileImage.setVisibility(View.INVISIBLE);
+
             }
             else
             {
                 holder.messageText.setBackgroundResource(R.drawable.message_text_background);
                 holder.messageText.setTextColor(Color.WHITE);
                 holder.messageText.setGravity(Gravity.LEFT);
+
+               // holder.userProfileImage.setVisibility(View.VISIBLE);
             }
 
             holder.messageText.setText(messages.getMessage());
@@ -104,9 +111,8 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.Messag
             holder.messageText.setVisibility(View.INVISIBLE);
             holder.messageText.setPadding(0,0,0,0);
 
-
-            Picasso.with(holder.userProfileImage.getContext()).load(messages.getMessage()).placeholder(R.drawable.default_profile)
-                    .into(holder.messagePicture);
+            Picasso.with(holder.userProfileImage.getContext()).load(messages.getMessage())
+                    .placeholder(R.drawable.default_profile).into(holder.messagePicture);
         }
     }
 
@@ -132,8 +138,10 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.Messag
             super(view);
 
             messageText = (TextView) view.findViewById(R.id.message_text);
-            messagePicture = (ImageView) view.findViewById(R.id.message_image_view);
+
             userProfileImage = (CircleImageView) view.findViewById(R.id.messages_profile_image);
+
+            messagePicture = (ImageView) view.findViewById(R.id.message_image_view);
 
         }
     }

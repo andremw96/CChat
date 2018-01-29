@@ -44,6 +44,8 @@ public class ProfileActivity extends AppCompatActivity {
     String sender_user_id;
     String receiver_user_id;
 
+    private String messageReceiverName;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -73,7 +75,13 @@ public class ProfileActivity extends AppCompatActivity {
 
         CURRENT_STATE = "not_friends";
 
-        receiver_user_id = getIntent().getExtras().get("visit_user_id").toString();
+        if ( (getIntent().getExtras().get("visit_user_id").toString() != null) && (getIntent().getExtras().get("user_name").toString() != null))
+        {
+            receiver_user_id = getIntent().getExtras().get("visit_user_id").toString();
+            messageReceiverName = getIntent().getExtras().get("user_name").toString();
+        }
+
+
         userProfileReference.child(receiver_user_id).addValueEventListener(new ValueEventListener() {
             @Override
             // retrieve data from firebase
