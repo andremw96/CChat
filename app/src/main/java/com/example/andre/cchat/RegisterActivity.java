@@ -19,6 +19,7 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.iid.FirebaseInstanceId;
 
 public class RegisterActivity extends AppCompatActivity {
 
@@ -97,6 +98,8 @@ public class RegisterActivity extends AppCompatActivity {
                     // jika berhasil menyimpan maka, user akan dialihkan ke main
                     if(task.isSuccessful())
                     {
+                        String device_token = FirebaseInstanceId.getInstance().getToken();
+
                         String current_user_id = mAuth.getCurrentUser().getUid();
                         // create reference and store the reference inside variable, reference to firebase database
                         storeUserDefaultDataReference = FirebaseDatabase.getInstance().getReference().child("Users").child(current_user_id);
@@ -104,6 +107,7 @@ public class RegisterActivity extends AppCompatActivity {
                         storeUserDefaultDataReference.child("user_name").setValue(name);
                         storeUserDefaultDataReference.child("user_status").setValue("Hello World, I am using CChat");
                         storeUserDefaultDataReference.child("user_image").setValue("default_profile");
+                        storeUserDefaultDataReference.child("device_token").setValue(device_token);
                         storeUserDefaultDataReference.child("user_thumb_image").setValue("default_image")
                                 .addOnCompleteListener(new OnCompleteListener<Void>() {
                                     @Override

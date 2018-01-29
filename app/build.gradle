@@ -35,8 +35,14 @@ dependencies {
     implementation 'de.hdodenhof:circleimageview:2.1.0'
     implementation 'com.theartofdev.edmodo:android-image-cropper:2.6.+'
     implementation 'com.squareup.picasso:picasso:2.5.2'
+    implementation 'com.firebaseui:firebase-ui-database:2.3.0'
+    implementation 'id.zelory:compressor:2.1.0'
+    implementation 'com.squareup.okhttp:okhttp:2.5.0'
 
 }
+
+
+
 
 
 

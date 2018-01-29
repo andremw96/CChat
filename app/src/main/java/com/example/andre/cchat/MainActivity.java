@@ -1,6 +1,7 @@
 package com.example.andre.cchat;
 
 import android.content.Intent;
+import android.provider.ContactsContract;
 import android.support.design.widget.TabLayout;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
@@ -13,6 +14,9 @@ import android.view.View;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ServerValue;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -24,6 +28,10 @@ public class MainActivity extends AppCompatActivity {
     private TabLayout myTabLayout;
     private TabsPagerAdapter myTabsPagerAdapter;
 
+    FirebaseUser currentUser;
+
+    private DatabaseReference UsersReference;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,6 +40,16 @@ public class MainActivity extends AppCompatActivity {
 
         // instansi firebase authentication
         mAuth = FirebaseAuth.getInstance();
+
+        currentUser = mAuth.getCurrentUser();
+
+        // user login properly / user login ke aplikasi
+        if(currentUser != null)
+        {
+            String online_user_id = mAuth.getCurrentUser().getUid();
+
+            UsersReference = FirebaseDatabase.getInstance().getReference().child("Users").child(online_user_id);
+        }
 
         // tab2 untuk mainactivity
         myViewPager = (ViewPager) findViewById(R.id.main_tabs_pager);
@@ -51,12 +69,29 @@ public class MainActivity extends AppCompatActivity {
         super.onStart();
 
         // mengambil user yg sedang login
-        FirebaseUser currentUser = mAuth.getCurrentUser();
+        currentUser = mAuth.getCurrentUser();
 
         // jika user blm login
         if ( currentUser == null )
         {
             LogoutUser();
+        }
+        else if ( currentUser != null )
+        {
+            UsersReference.child("online").setValue("true");
+        }
+    }
+
+    @Override
+    // onstop basically user minimize his app
+    protected void onStop()
+    {
+        super.onStop();
+
+        // jika login sedang online, lalu dia minimize app, maka node online diubah ke jam terakhir online
+        if ( currentUser != null )
+        {
+            UsersReference.child("online").setValue(ServerValue.TIMESTAMP);
         }
     }
 
@@ -87,6 +122,13 @@ public class MainActivity extends AppCompatActivity {
 
         if(item.getItemId() == R.id.main_logout_button)
         {
+            // ketika user klik logout, maka dia offline
+            // maka nilai node online di firebase user diubah ke waktu terakhir dia online
+            if(currentUser != null)
+            {
+                UsersReference.child("online").setValue(ServerValue.TIMESTAMP);
+            }
+
             mAuth.signOut(); // logout dari firebase database
 
             LogoutUser(); // kembali ke main page
@@ -98,6 +140,17 @@ public class MainActivity extends AppCompatActivity {
             startActivity(settingsIntent);
         }
 
+        if(item.getItemId() == R.id.main_all_users_button)
+        {
+            Intent allUsersIntent = new Intent(MainActivity.this, AllUsersActivity.class);
+            startActivity(allUsersIntent);
+        }
+
+
         return true;
     }
+
+
 }
+
+

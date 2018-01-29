@@ -8,6 +8,11 @@
         app:showAsAction="never">
     </item>
 
+    <item android:title="Semua User"
+        android:id="@+id/main_all_users_button"
+        app:showAsAction="never">
+    </item>
+
     <item android:title="Logout"
         android:id="@+id/main_logout_button"
         app:showAsAction="never">
