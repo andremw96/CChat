@@ -7,12 +7,17 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.view.View;
+import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.NetworkPolicy;
 import com.squareup.picasso.Picasso;
@@ -24,6 +29,9 @@ public class AllUsersActivity extends AppCompatActivity {
     private Toolbar mToolbar;
     private RecyclerView allUsersList;
     private DatabaseReference allUsersRef;
+
+    private EditText searchInputText;
+    private ImageButton searchButton;
 
 
     @Override
@@ -40,16 +48,38 @@ public class AllUsersActivity extends AppCompatActivity {
         allUsersList.setHasFixedSize(true);
         allUsersList.setLayoutManager(new LinearLayoutManager(this));
 
+        searchButton = (ImageButton) findViewById(R.id.search_people_button);
+        searchInputText = (EditText) findViewById(R.id.search_input_text);
+
         // ambil data dari firebase yg tabelnya users
         allUsersRef = FirebaseDatabase.getInstance().getReference().child("Users");
         // load data offline
         allUsersRef.keepSynced(true);
 
+        searchButton.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View view)
+            {
+                String searchUserName = searchInputText.getText().toString().toLowerCase();
+
+                if(TextUtils.isEmpty(searchUserName))
+                {
+                    Toast.makeText(AllUsersActivity.this, "Isikan nama teman yang dicari", Toast.LENGTH_SHORT).show();
+                }
+
+                cariTeman(searchUserName);
+            }
+        });
+
     }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
+    private void cariTeman(String searchUserName)
+    {
+        Toast.makeText(this, "Sedang Mencari...", Toast.LENGTH_SHORT).show();
+
+        Query searchFriends = allUsersRef.orderByChild("user_name_lowercase")
+                .startAt(searchUserName).endAt(searchUserName + "\uf8ff");
 
         // we need firebase recycler adapter for retrieve data from firebase and display on our recycler view
         // first we need include library to use firebase adapter
@@ -61,7 +91,7 @@ public class AllUsersActivity extends AppCompatActivity {
                         AllUsers.class,
                         R.layout.all_users_display_layout,
                         AllUsersViewHolder.class,
-                        allUsersRef
+                        searchFriends
                 )
         {
             @Override

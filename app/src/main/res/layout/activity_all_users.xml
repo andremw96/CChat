@@ -7,15 +7,52 @@
     tools:context="com.example.andre.cchat.AllUsersActivity">
 
     <include
-        layout="@layout/app_bar_layout"
-        android:id="@+id/all_users_app_bar" >
-    </include>
+        android:id="@+id/all_users_app_bar"
+        layout="@layout/app_bar_layout"></include>
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/all_users_list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_alignParentStart="true"
-        android:layout_below="@+id/all_users_app_bar"></android.support.v7.widget.RecyclerView>
+        android:layout_below="@+id/search_input_text"
+        android:layout_margin="15dp"></android.support.v7.widget.RecyclerView>
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/all_users_app_bar"
+        android:layout_margin="15dp"
+        android:layout_marginTop="24dp"
+        android:text="Temukan teman baru anda"
+        android:textAlignment="center"
+        android:textSize="18sp" />
+
+    <EditText
+        android:id="@+id/search_input_text"
+        android:layout_width="280dp"
+        android:layout_height="wrap_content"
+        android:layout_alignStart="@+id/textView"
+        android:layout_below="@+id/textView"
+        android:layout_marginStart="11dp"
+        android:background="@drawable/search_text_background"
+        android:ems="10"
+        android:hint="Cari disini..."
+        android:inputType="textMultiLine"
+        android:padding="15dp"
+        android:textColor="@android:color/background_light"
+        android:textColorHint="@android:color/background_light" />
+
+    <ImageButton
+        android:id="@+id/search_people_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/textView"
+        android:layout_toEndOf="@+id/search_input_text"
+        android:background="@drawable/search_text_background"
+        android:padding="10dp"
+        app:srcCompat="@drawable/search_icon" />
 
 </RelativeLayout>

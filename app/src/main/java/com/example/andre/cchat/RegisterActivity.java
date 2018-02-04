@@ -105,6 +105,7 @@ public class RegisterActivity extends AppCompatActivity {
                         storeUserDefaultDataReference = FirebaseDatabase.getInstance().getReference().child("Users").child(current_user_id);
 
                         storeUserDefaultDataReference.child("user_name").setValue(name);
+                        storeUserDefaultDataReference.child("user_name_lowercase").setValue(name.toLowerCase());
                         storeUserDefaultDataReference.child("user_status").setValue("Hello World, I am using CChat");
                         storeUserDefaultDataReference.child("user_image").setValue("default_profile");
                         storeUserDefaultDataReference.child("device_token").setValue(device_token);

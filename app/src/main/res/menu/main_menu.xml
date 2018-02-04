@@ -8,7 +8,7 @@
         app:showAsAction="never">
     </item>
 
-    <item android:title="Semua User"
+    <item android:title="Temukan Teman"
         android:id="@+id/main_all_users_button"
         app:showAsAction="never">
     </item>
