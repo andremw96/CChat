@@ -100,7 +100,7 @@ public class FriendsFragment extends Fragment
                 )
         {
             @Override
-            protected void populateViewHolder(final FriendsViewHolder viewHolder, Friends model, int position)
+            protected void populateViewHolder(final FriendsViewHolder viewHolder, final Friends model, int position)
             {
                 viewHolder.setDate(model.getDate());
 
@@ -150,6 +150,7 @@ public class FriendsFragment extends Fragment
                                         {
                                             Intent profileIntent = new Intent(getContext(), ProfileActivity.class);
                                             profileIntent.putExtra("visit_user_id", list_user_id);
+                                            profileIntent.putExtra("user_name", userName);
                                             startActivity(profileIntent);
                                         }
 

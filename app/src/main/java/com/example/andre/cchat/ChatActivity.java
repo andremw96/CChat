@@ -100,7 +100,7 @@ public class ChatActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         messageSenderID = mAuth.getCurrentUser().getUid();
 
-        if ( (getIntent().getExtras().get("visit_user_id").toString() != null) && (getIntent().getExtras().get("user_name").toString() != null)) {
+        if ( (getIntent().getExtras().get("visit_user_id").toString() != null) && (getIntent().getExtras().get("user_name").toString() != null) ) {
             messageReceiverId = getIntent().getExtras().get("visit_user_id").toString();
             messageReceiverName = getIntent().getExtras().get("user_name").toString();
         }

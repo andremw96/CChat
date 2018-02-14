@@ -3,6 +3,7 @@ package com.example.andre.cchat;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -75,7 +76,7 @@ public class ProfileActivity extends AppCompatActivity {
 
         CURRENT_STATE = "not_friends";
 
-        if ( (getIntent().getExtras().get("visit_user_id").toString() != null) && (getIntent().getExtras().get("user_name").toString() != null))
+        if ( (getIntent().getExtras().get("visit_user_id").toString() != null) && (getIntent().getExtras().get("user_name").toString() != null) )
         {
             receiver_user_id = getIntent().getExtras().get("visit_user_id").toString();
             messageReceiverName = getIntent().getExtras().get("user_name").toString();
