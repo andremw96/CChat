@@ -60,7 +60,8 @@
             android:parentActivityName=".MainActivity" />
 
         <activity android:name=".ChatActivity"
-                  android:parentActivityName=".MainActivity" >
+                  android:parentActivityName=".MainActivity"
+                  android:windowSoftInputMode="adjustPan" >
             <intent-filter>
                 <action android:name="com.example.andre.cchat_TARGET_NOTIFICATION_MESSAGE" />
                 <category android:name="android.intent.category.DEFAULT" />
