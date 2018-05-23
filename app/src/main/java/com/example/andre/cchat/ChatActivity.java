@@ -2,6 +2,7 @@ package com.example.andre.cchat;
 
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.media.Image;
 import android.net.Uri;
@@ -9,17 +10,24 @@ import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
+import android.util.Base64;
 import android.util.Log;
+import android.view.GestureDetector;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Gallery;
 import android.widget.ImageButton;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.support.v7.widget.Toolbar;
@@ -44,10 +52,20 @@ import com.squareup.picasso.Picasso;
 import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
 
+import java.io.ByteArrayOutputStream;
+import java.security.AlgorithmParameters;
+import java.security.SecureRandom;
+import java.security.spec.KeySpec;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.crypto.Cipher;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.PBEKeySpec;
+import javax.crypto.spec.SecretKeySpec;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -85,6 +103,9 @@ public class ChatActivity extends AppCompatActivity {
     private StorageReference MessageImageStorageRef;
 
     private ProgressDialog loadingBar;
+
+    String outputString;
+    String AES = "AES/CBC/PKCS5Padding";
 
 
     @Override
@@ -244,6 +265,16 @@ public class ChatActivity extends AppCompatActivity {
             }
         });
 
+        sendMessageButton.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View view)
+            {
+                showUpdateDialog();
+
+                return false;
+            }
+        });
+
 
         // open gallery
         selectImageButton.setOnClickListener(new View.OnClickListener() {
@@ -260,6 +291,58 @@ public class ChatActivity extends AppCompatActivity {
         FetchMessages();
 
     }
+
+    private void showUpdateDialog(){
+        String messageText = inputMessageText.getText().toString();
+
+        LayoutInflater linf = LayoutInflater.from(this);
+        final View inflator = linf.inflate(R.layout.update_dialog, null);
+        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+
+        alert.setTitle("Enkripsi Pesan");
+        alert.setView(inflator);
+
+        final EditText editTextPesanEnkripsi = (EditText) inflator.findViewById(R.id.edit_pesan_enkripsi);
+        final EditText editKunciEnkripsi = (EditText) inflator.findViewById(R.id.edit_kunci_enkripsi);
+
+        editTextPesanEnkripsi.setText(messageText);
+
+        alert.setPositiveButton("ok", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton)
+            {
+                String messageText = editTextPesanEnkripsi.getText().toString();
+                String inputPassword = editKunciEnkripsi.getText().toString();
+
+                Log.d("messageText", messageText);
+                Log.d("inputPassword", inputPassword);
+
+                if(TextUtils.isEmpty(messageText))
+                {
+                    Toast.makeText(ChatActivity.this, "Silahkan Isi Pesan Anda", Toast.LENGTH_SHORT).show();
+                }
+                if(TextUtils.isEmpty(inputPassword))
+                {
+                    Toast.makeText(ChatActivity.this, "Silahkan Isi Kunci Anda", Toast.LENGTH_SHORT).show();
+                }
+                else {
+                    try {
+                        outputString = encrypt(messageText, inputPassword);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    inputMessageText.setText(outputString);
+                }
+            }
+        });
+
+        alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                dialog.cancel();
+            }
+        });
+
+        alert.show();
+    };
 
 
     @Override
@@ -444,5 +527,64 @@ public class ChatActivity extends AppCompatActivity {
                 }
             });
         }
+    }
+
+    private String encrypt(String Data, String password) throws Exception
+    {
+        SecureRandom random = new SecureRandom();
+        byte[] salt = new byte[16];
+        random.nextBytes(salt);
+
+        SecretKeySpec key = generateKey(password, salt);
+        Cipher c = Cipher.getInstance(AES);
+        c.init(Cipher.ENCRYPT_MODE, key);
+        AlgorithmParameters params = c.getParameters();
+        byte[] iv = params.getParameterSpec(IvParameterSpec.class).getIV();
+        byte[] encryptedText = c.doFinal(Data.getBytes("UTF-8"));
+
+        // concatenate salt + iv + ciphertext
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        outputStream.write(salt);
+        outputStream.write(iv);
+        outputStream.write(encryptedText);
+
+
+        //  byte[] encVal = c.doFinal(Data.getBytes());
+        String encryptedValue = Base64.encodeToString(outputStream.toByteArray(), Base64.DEFAULT);
+
+        String x = new String(outputStream.toByteArray(), "US-ASCII");
+        Log.d("pesan terenkripsi", x);
+
+        return encryptedValue;
+    }
+
+    private SecretKeySpec generateKey(String password, byte[] salt) throws Exception
+    {
+        byte[] bytes = password.getBytes("UTF-8");
+
+       /* final MessageDigest digest = MessageDigest.getInstance("SHA-1");
+        digest.update(bytes, 0, bytes.length);
+        byte[] key = digest.digest();
+        SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES"); */
+
+        KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, 65536, 128);
+        SecretKeyFactory f = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
+        byte[] key = f.generateSecret(spec).getEncoded();
+        SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
+
+        String xsecretkeyspec = Base64.encodeToString(bytes, Base64.DEFAULT);
+        Log.d("kunci stlh UTF-8", xsecretkeyspec);
+
+        String xxsecretkeyspec = Base64.encodeToString(key, Base64.DEFAULT);
+        Log.d("kunci enkripsi base64", xxsecretkeyspec);
+
+        String s = new String(bytes, "US-ASCII");
+        Log.d("kunci stlh UTF-8 ASCII", s);
+
+        String x = new String(key, "US-ASCII");
+        Log.d("kunci enkripsi ASCII", x);
+
+        return secretKeySpec;
+
     }
 }

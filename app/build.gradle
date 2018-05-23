@@ -20,7 +20,7 @@ android {
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation fileTree(dir: 'libs', include: ['*.jar', '.so'])
     //noinspection GradleCompatible
     implementation 'com.android.support:appcompat-v7:26.1.0'
     implementation 'com.android.support:design:26.1.0'
@@ -39,6 +39,7 @@ dependencies {
     implementation 'com.firebaseui:firebase-ui-database:2.3.0'
     implementation 'id.zelory:compressor:2.1.0'
     implementation 'com.squareup.okhttp:okhttp:2.5.0'
+    implementation files('libs/ecdh-curve25519.jar')
 }
 
 configurations.all {

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:padding="16dp"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Pesan" />
+
+    <EditText
+        android:id="@+id/edit_pesan_enkripsi"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Isikan Pesan.." />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Kunci" />
+
+    <EditText
+        android:id="@+id/edit_kunci_enkripsi"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Kunci Enkripsi..."
+        android:inputType="textPassword" />
+
+</LinearLayout>

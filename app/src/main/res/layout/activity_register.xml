@@ -16,9 +16,8 @@
         android:id="@+id/register_name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/buat_akun_button"
         android:layout_alignParentStart="true"
-        android:layout_marginBottom="192dp"
+        android:layout_centerVertical="true"
         android:ems="10"
         android:hint="Name..."
         android:inputType="textMultiLine"
@@ -29,8 +28,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
-        android:layout_alignTop="@+id/register_name"
-        android:layout_marginTop="63dp"
+        android:layout_below="@+id/register_name"
         android:ems="10"
         android:hint="Email..."
         android:inputType="textMultiLine|textEmailAddress"
@@ -42,7 +40,6 @@
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
         android:layout_below="@+id/register_email"
-        android:layout_marginTop="11dp"
         android:ems="10"
         android:hint="Password... ( min 6 character )"
         android:inputType="textMultiLine|textPassword"
@@ -61,4 +58,24 @@
         android:textSize="20sp"
         android:textStyle="bold"
         tools:text="Buat Akun" />
+
+    <Button
+        android:id="@+id/generate_key_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/register_password"
+        android:layout_centerHorizontal="true"
+        android:text="Hasilkan Kunci Privat Milikmu" />
+
+    <EditText
+        android:id="@+id/register_private_key"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/buat_akun_button"
+        android:layout_centerHorizontal="true"
+        android:ems="10"
+        android:inputType="text|textMultiLine"
+        android:textAlignment="center"
+        android:textColor="@android:color/holo_red_dark" />
+
 </RelativeLayout>
