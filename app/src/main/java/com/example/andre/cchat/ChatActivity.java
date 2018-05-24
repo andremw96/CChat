@@ -4,6 +4,7 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Color;
 import android.media.Image;
 import android.net.Uri;
 import android.provider.ContactsContract;
@@ -19,19 +20,23 @@ import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
 import android.view.GestureDetector;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Gallery;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.support.v7.widget.Toolbar;
 
+import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
@@ -57,6 +62,7 @@ import java.security.AlgorithmParameters;
 import java.security.SecureRandom;
 import java.security.spec.KeySpec;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -70,9 +76,9 @@ import javax.crypto.spec.SecretKeySpec;
 import de.frank_durr.ecdh_curve25519.ECDHCurve25519;
 import de.hdodenhof.circleimageview.CircleImageView;
 
-public class ChatActivity extends AppCompatActivity {
+public class ChatActivity extends AppCompatActivity implements MessagesAdapter.ClickListener{
 
-    private String messageReceiverId;
+    private static String messageReceiverId;
     private String messageReceiverName;
 
     private Toolbar chatToolbar;
@@ -88,9 +94,10 @@ public class ChatActivity extends AppCompatActivity {
 
     private DatabaseReference rootRef;
     private DatabaseReference notificationsReference;
+    private DatabaseReference usersReference;
 
     private FirebaseAuth mAuth;
-    private String messageSenderID;
+    private static String messageSenderID;
 
     private RecyclerView userMessagesList;
 
@@ -106,6 +113,7 @@ public class ChatActivity extends AppCompatActivity {
     private ProgressDialog loadingBar;
 
     private String outputString;
+    private String pesanTerenkripsi;
     private String public_key_receiver_hex;
     private String AES = "AES/CBC/PKCS5Padding";
 
@@ -155,11 +163,12 @@ public class ChatActivity extends AppCompatActivity {
         userMessagesList = (RecyclerView) findViewById(R.id.chat_message_list_user);
 
         messageAdapter = new MessagesAdapter(messageList, this, ChatActivity.this);
+        messageAdapter.setClickListener(this);
 
         linearLayoutManager = new LinearLayoutManager(this);
-
+        linearLayoutManager.setStackFromEnd(true);
+        linearLayoutManager.setSmoothScrollbarEnabled(true);
         userMessagesList.setHasFixedSize(true);
-
         userMessagesList.setLayoutManager(linearLayoutManager);
 
         userMessagesList.setAdapter(messageAdapter);
@@ -293,6 +302,139 @@ public class ChatActivity extends AppCompatActivity {
         FetchMessages();
 
     }
+/*
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        Query chatQuery = rootRef.child("Messages").child(messageSenderID).child(messageReceiverId);
+
+        final FirebaseRecyclerAdapter<Messages, MessageViewHolder> firebaseRecyclerAdapter
+                = new FirebaseRecyclerAdapter<Messages, MessageViewHolder>
+                (
+                        Messages.class,
+                        R.layout.messages_layout_users,
+                        MessageViewHolder.class,
+                        chatQuery
+                )
+        {
+            @Override
+            protected void populateViewHolder(final MessageViewHolder viewHolder, Messages model, int position)
+            {
+                viewHolder.setText(model.getMessage());
+                String messageSenderID = mAuth.getCurrentUser().getUid();
+
+                usersReference = FirebaseDatabase.getInstance().getReference().child("Users").child(messageSenderID);
+                usersReference.addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        String userImage = dataSnapshot.child("user_thumb_image").getValue().toString();
+
+                        viewHolder.setUser_thumb_image(getApplicationContext(), userImage);
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+
+                    }
+                });
+
+                pesanTerenkripsi = null;
+
+                String fromUserID = messageSenderID;
+                String fromMessageType = "text";
+
+
+                Log.d("tipe pesan", fromMessageType);
+                if(fromMessageType.equals("text"))
+                {
+                    //viewHolder.messagePicture.setVisibility(View.INVISIBLE);
+
+                    // jika kita login sebagai kita, maka layout yg tampil adalah ini,,,
+                    // which is background ijo, color black
+                    if(fromUserID.equals(messageSenderID))
+                    {
+                        viewHolder.mView.setBackgroundResource(R.drawable.message_text_background_two);
+                     //   viewHolder.setTextColor(Color.BLACK);
+                     //   viewHolder.setGravity(Gravity.RIGHT);
+
+                     //   viewHolder.
+
+                        //  holder.userProfileImage.setVisibility(View.INVISIBLE);
+
+                    }
+                    else
+                    {
+                        viewHolder.mView.setBackgroundResource(R.drawable.message_text_background);
+                       // viewHolder.mView.setTextColor(Color.WHITE);
+                       // viewHolder.mView.setGravity(Gravity.LEFT);
+                        // holder.userProfileImage.setVisibility(View.VISIBLE);
+                    }
+
+                   // viewHolder.messageText.setText(messages.getMessage());
+                }
+                else
+                {
+                   // viewHolder.messageText.setVisibility(View.INVISIBLE);
+                   // viewHolder.messageText.setPadding(0,0,0,0);
+
+                   // Picasso.with(viewHolder.userProfileImage.getContext()).load(messages.getMessage())
+                   //         .placeholder(R.drawable.default_profile).into(viewHolder.messagePicture);
+                }
+            }
+        };
+
+        userMessagesList.setAdapter(firebaseRecyclerAdapter);
+    }*/
+
+/*
+    // makiung view holder
+    public static class MessageViewHolder extends RecyclerView.ViewHolder
+    {
+        View mView;
+
+        public ImageView messagePicture;
+
+        public MessageViewHolder(View view)
+        {
+            super(view);
+
+            mView = view;
+
+            //messagePicture = (ImageView) view.findViewById(R.id.message_image_view);
+
+        }
+
+        public void setText(String message)
+        {
+            TextView messageText = (TextView) mView.findViewById(R.id.message_text);
+            messageText.setText(message);
+        }
+
+        public void  setUser_thumb_image(final Context ctx, final String user_thumb_image)
+        {
+            final CircleImageView thumb_image = (CircleImageView) mView.findViewById(R.id.messages_profile_image);
+
+            // load images offline
+            Picasso.with(ctx).load(user_thumb_image).networkPolicy(NetworkPolicy.OFFLINE).placeholder(R.drawable.default_profile).
+                    into(thumb_image, new Callback() {
+                        @Override
+                        // onsuccess akan melload picture offline
+                        public void onSuccess() {
+
+                        }
+
+                        @Override
+                        // onEror berarti load ofline gagal, maka load gambar lgsg ke database
+                        public void onError() {
+                            Picasso.with(ctx).load(user_thumb_image).placeholder(R.drawable.default_profile).into(thumb_image);
+                        }
+                    });
+        }
+
+
+    }*/
+
 
     private void showUpdateDialog(){
         String messageText = inputMessageText.getText().toString();
@@ -446,6 +588,7 @@ public class ChatActivity extends AppCompatActivity {
                         // ketika fetchmessage, halaman page lgsg ke paling bawah alias pesan terakhir
                         userMessagesList.scrollToPosition(messageList.size() - 1);
 
+
                        // mRefreshLayoutList.setRefreshing(false);
                     }
 
@@ -561,6 +704,32 @@ public class ChatActivity extends AppCompatActivity {
         return encryptedValue;
     }
 
+    public String decrypt(String outputString, String password) throws Exception
+    {
+        byte[] decodeValue = Base64.decode(outputString, Base64.DEFAULT);
+
+        byte[] salt = Arrays.copyOfRange(decodeValue, 0, 16);
+        byte[] iv = Arrays.copyOfRange(decodeValue, 16, 32);
+        byte[] ct = Arrays.copyOfRange(decodeValue, 32, decodeValue.length);
+
+        SecretKeySpec key = generateKey(password, salt);
+        Cipher c = Cipher.getInstance("AES/CBC/PKCS5Padding");
+
+        c.init(Cipher.DECRYPT_MODE, key, new IvParameterSpec(iv));
+        byte[] plaintext = c.doFinal(ct);
+        // c.init(Cipher.DECRYPT_MODE, key);
+
+        String x = new String(plaintext, "US-ASCII");
+        Log.d("pesan terdekripsi", x);
+
+        return new String(plaintext, "UTF-8");
+
+        // byte[] decValue = c.doFinal(decodeValue);
+        //  String decryptedValue = new String(decValue);
+        //  return decryptedValue;
+        // return null;
+    }
+
     private SecretKeySpec generateKey(String password, byte[] salt) throws Exception
     {
         LayoutInflater linf = LayoutInflater.from(this);
@@ -654,5 +823,62 @@ public class ChatActivity extends AppCompatActivity {
         }
 
         return sb.toString();
+    }
+
+    @Override
+    public void itemClicked(View view, int position) {
+        String TAG = "messagePosition";
+        Log.d(TAG, "You clicked on "+position);
+
+        Messages messages = messageList.get(position);
+        pesanTerenkripsi = messages.getMessage();
+        System.out.println(pesanTerenkripsi);
+
+        LayoutInflater linf = LayoutInflater.from(this);
+        final View inflator = linf.inflate(R.layout.dekripsi_dialog, null);
+        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+
+        alert.setTitle("Dekripsi Pesan");
+        alert.setView(inflator);
+
+        final EditText editTextPesanDekripsi = (EditText) inflator.findViewById(R.id.edit_pesan_dekripsi);
+        final EditText editKunciDekripsi = (EditText) inflator.findViewById(R.id.edit_kunci_dekripsi); //ini kunci privatenya
+
+        editTextPesanDekripsi.setText(pesanTerenkripsi);
+
+        alert.setPositiveButton("ok", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton)
+            {
+                String messageText = editTextPesanDekripsi.getText().toString();
+                String inputPassword = editKunciDekripsi.getText().toString(); //ini kunci privatenya
+
+                Log.d("messageText", messageText);
+
+                if(TextUtils.isEmpty(messageText))
+                {
+                    Toast.makeText(ChatActivity.this, "Silahkan Isi Pesan Anda", Toast.LENGTH_SHORT).show();
+                }
+                if(TextUtils.isEmpty(inputPassword))
+                {
+                    Toast.makeText(ChatActivity.this, "Silahkan Isi Kunci Anda", Toast.LENGTH_SHORT).show();
+                }
+                else {
+                    try {
+                        //    outputString = ChatActivity.decrypt(messageText, inputPassword);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    // inputMessageText.setText(outputString);
+                }
+            }
+        });
+
+        alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                dialog.cancel();
+            }
+        });
+
+        alert.show();
     }
 }

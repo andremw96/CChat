@@ -54,7 +54,8 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.Messag
     private Activity parentActivity;
 
     private String pesanTerenkripsi;
-    private String AES = "AES/CBC/PKCS5Padding";
+
+    private ClickListener clickListener;
 
     public MessagesAdapter(List<Messages> userMessagesList, Context context, Activity parentActivity) {
         this.userMessagesList = userMessagesList;
@@ -68,9 +69,12 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.Messag
     {
         View V = LayoutInflater.from(parent.getContext()).inflate(R.layout.messages_layout_users, parent, false);
 
+        MessageViewHolder holder = new MessageViewHolder(V);
+
         mAuth = FirebaseAuth.getInstance();
 
-        return new MessageViewHolder(V);
+        //return new MessageViewHolder(V);
+        return holder;
     }
 
 
@@ -137,65 +141,12 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.Messag
             Picasso.with(holder.userProfileImage.getContext()).load(messages.getMessage())
                     .placeholder(R.drawable.default_profile).into(holder.messagePicture);
         }
-
-        holder.mView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                String TAG = "messagePosition";
-                Log.w(TAG, "You clicked on "+position);
-
-                pesanTerenkripsi = messages.getMessage();
-                System.out.println(pesanTerenkripsi);
-
-                LayoutInflater linf = LayoutInflater.from(parentActivity);
-                final View inflator = linf.inflate(R.layout.dekripsi_dialog, null);
-                AlertDialog.Builder alert = new AlertDialog.Builder(parentActivity);
-
-                alert.setTitle("Dekripsi Pesan");
-                alert.setView(inflator);
-
-                final EditText editTextPesanDekripsi = (EditText) inflator.findViewById(R.id.edit_pesan_dekripsi);
-
-                editTextPesanDekripsi.setText(pesanTerenkripsi);
-
-                alert.setPositiveButton("ok", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int whichButton)
-                    {
-                       // String messageText = editTextPesanDekripsi.getText().toString();
-
-                      //  Log.d("messageText", messageText);
-
-                       /* if(TextUtils.isEmpty(messageText))
-                        {
-                            Toast.makeText(ChatActivity.this, "Silahkan Isi Pesan Anda", Toast.LENGTH_SHORT).show();
-                        }
-                        if(TextUtils.isEmpty(inputPassword))
-                        {
-                            Toast.makeText(ChatActivity.this, "Silahkan Isi Kunci Anda", Toast.LENGTH_SHORT).show();
-                        }
-                        else {
-                            try {
-                                outputString = encrypt(messageText, inputPassword);
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
-                            inputMessageText.setText(outputString);
-                        }*/
-                    }
-                });
-
-                alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int whichButton) {
-                        dialog.cancel();
-                    }
-                });
-
-                alert.show();
-
-            }
-        });
     }
 
+    public void setClickListener(ClickListener clickListener)
+    {
+        this.clickListener = clickListener;
+    }
 
 
     @Override
@@ -207,15 +158,12 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.Messag
 
 
     // makiung view holder
-    public static class MessageViewHolder extends RecyclerView.ViewHolder
-    {
+    public class MessageViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         View mView;
 
         public TextView messageText;
         public CircleImageView userProfileImage;
         public ImageView messagePicture;
-
-        public int adapterPosition;
 
         public MessageViewHolder(View view)
         {
@@ -229,59 +177,21 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.Messag
 
             messagePicture = (ImageView) view.findViewById(R.id.message_image_view);
 
-            adapterPosition = getAdapterPosition();
+            mView.setOnClickListener(this);
+        }
 
+        @Override
+        public void onClick(View view)
+        {
+            if(clickListener!=null)
+            {
+                clickListener.itemClicked(view, getLayoutPosition());
+            }
         }
     }
 
-    private String decrypt(String outputString, String password) throws Exception
-    {
-        byte[] decodeValue = Base64.decode(outputString, Base64.DEFAULT);
-
-        byte[] salt = Arrays.copyOfRange(decodeValue, 0, 16);
-        byte[] iv = Arrays.copyOfRange(decodeValue, 16, 32);
-        byte[] ct = Arrays.copyOfRange(decodeValue, 32, decodeValue.length);
-
-        SecretKeySpec key = generateKey(password, salt);
-        Cipher c = Cipher.getInstance(AES);
-
-        c.init(Cipher.DECRYPT_MODE, key, new IvParameterSpec(iv));
-        byte[] plaintext = c.doFinal(ct);
-        // c.init(Cipher.DECRYPT_MODE, key);
-
-        String x = new String(plaintext, "US-ASCII");
-        Log.d("pesan terdekripsi", x);
-
-        return new String(plaintext, "UTF-8");
-
-        // byte[] decValue = c.doFinal(decodeValue);
-        //  String decryptedValue = new String(decValue);
-        //  return decryptedValue;
-        // return null;
+    public interface ClickListener{
+        public void itemClicked(View view, int position);
     }
 
-    private SecretKeySpec generateKey(String password, byte[] salt) throws Exception
-    {
-        byte[] bytes = password.getBytes("UTF-8");
-
-        KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, 65536, 128);
-        SecretKeyFactory f = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
-        byte[] key = f.generateSecret(spec).getEncoded();
-        SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
-
-        String xsecretkeyspec = Base64.encodeToString(bytes, Base64.DEFAULT);
-        Log.d("kunci stlh UTF-8", xsecretkeyspec);
-
-        String xxsecretkeyspec = Base64.encodeToString(key, Base64.DEFAULT);
-        Log.d("kunci enkripsi base64", xxsecretkeyspec);
-
-        String s = new String(bytes, "US-ASCII");
-        Log.d("kunci stlh UTF-8 ASCII", s);
-
-        String x = new String(key, "US-ASCII");
-        Log.d("kunci enkripsi ASCII", x);
-
-        return secretKeySpec;
-
-    }
 }
