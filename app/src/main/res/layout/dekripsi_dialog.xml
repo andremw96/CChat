@@ -10,10 +10,10 @@
         android:text="Pesan" />
 
     <EditText
-        android:id="@+id/edit_pesan_enkripsi"
+        android:id="@+id/edit_pesan_dekripsi"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Isikan Pesan.." />
+        android:enabled="false" />
 
     <TextView
         android:layout_width="match_parent"
@@ -21,17 +21,10 @@
         android:text="Kunci" />
 
     <EditText
-        android:id="@+id/edit_kunci_enkripsi"
+        android:id="@+id/edit_kunci_dekripsi"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Kunci Enkripsi..."
+        android:hint="Kunci Dekripsi..."
         android:inputType="textPassword" />
-
-    <TextView
-        android:id="@+id/textViewKunciPublikReceiver"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textSize="8sp"
-        android:visibility="gone" />
 
 </LinearLayout>

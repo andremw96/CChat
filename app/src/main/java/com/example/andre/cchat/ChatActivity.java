@@ -67,6 +67,7 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
+import de.frank_durr.ecdh_curve25519.ECDHCurve25519;
 import de.hdodenhof.circleimageview.CircleImageView;
 
 public class ChatActivity extends AppCompatActivity {
@@ -104,8 +105,9 @@ public class ChatActivity extends AppCompatActivity {
 
     private ProgressDialog loadingBar;
 
-    String outputString;
-    String AES = "AES/CBC/PKCS5Padding";
+    private String outputString;
+    private String public_key_receiver_hex;
+    private String AES = "AES/CBC/PKCS5Padding";
 
 
     @Override
@@ -152,7 +154,7 @@ public class ChatActivity extends AppCompatActivity {
         inputMessageText = (EditText) findViewById(R.id.chat_input_message);
         userMessagesList = (RecyclerView) findViewById(R.id.chat_message_list_user);
 
-        messageAdapter = new MessagesAdapter(messageList);
+        messageAdapter = new MessagesAdapter(messageList, this, ChatActivity.this);
 
         linearLayoutManager = new LinearLayoutManager(this);
 
@@ -303,7 +305,7 @@ public class ChatActivity extends AppCompatActivity {
         alert.setView(inflator);
 
         final EditText editTextPesanEnkripsi = (EditText) inflator.findViewById(R.id.edit_pesan_enkripsi);
-        final EditText editKunciEnkripsi = (EditText) inflator.findViewById(R.id.edit_kunci_enkripsi);
+        final EditText editKunciEnkripsi = (EditText) inflator.findViewById(R.id.edit_kunci_enkripsi); //ini kunci privatenya
 
         editTextPesanEnkripsi.setText(messageText);
 
@@ -311,7 +313,7 @@ public class ChatActivity extends AppCompatActivity {
             public void onClick(DialogInterface dialog, int whichButton)
             {
                 String messageText = editTextPesanEnkripsi.getText().toString();
-                String inputPassword = editKunciEnkripsi.getText().toString();
+                String inputPassword = editKunciEnkripsi.getText().toString(); //ini kunci privatenya
 
                 Log.d("messageText", messageText);
                 Log.d("inputPassword", inputPassword);
@@ -345,6 +347,7 @@ public class ChatActivity extends AppCompatActivity {
     };
 
 
+    // buat gambar
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -560,25 +563,58 @@ public class ChatActivity extends AppCompatActivity {
 
     private SecretKeySpec generateKey(String password, byte[] salt) throws Exception
     {
-        byte[] bytes = password.getBytes("UTF-8");
+        LayoutInflater linf = LayoutInflater.from(this);
+        final View inflator = linf.inflate(R.layout.update_dialog, null);
+        AlertDialog.Builder alert = new AlertDialog.Builder(this);
 
-       /* final MessageDigest digest = MessageDigest.getInstance("SHA-1");
-        digest.update(bytes, 0, bytes.length);
-        byte[] key = digest.digest();
-        SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES"); */
+        final TextView viewKunciPublikReceiver = (TextView) inflator.findViewById(R.id.textViewKunciPublikReceiver);
 
-        KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, 65536, 128);
+        DatabaseReference getUserDataReference = FirebaseDatabase.getInstance().getReference().child("Users").child(messageReceiverId);
+        getUserDataReference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                String kunci_public_receiver_hexa = dataSnapshot.child("user_public_key").getValue().toString(); // kunci publik bentuknya HEXA
+
+                if (kunci_public_receiver_hexa != null)
+                {
+                    Log.d("kuncipublicreceiverhex", kunci_public_receiver_hexa);
+                    viewKunciPublikReceiver.setText(kunci_public_receiver_hexa);
+                }
+                else
+                {
+                    Toast.makeText(ChatActivity.this, "User tersebut tidak punya kunci publik, tidak bisa enkripsi pesan", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+        public_key_receiver_hex = viewKunciPublikReceiver.getText().toString();
+        Log.d("public_key_receiver_hex", public_key_receiver_hex);
+
+        byte[] kunci_public_receiver = public_key_receiver_hex.getBytes("UTF-8"); // kunci public user receiver
+        byte[] kunci_private_sender = password.getBytes("UTF-8"); // kunci privatenya user sender
+
+        byte[] sender_shared_secret = ECDHCurve25519.generate_shared_secret(kunci_private_sender, kunci_public_receiver);
+
+        String sender_shared_secret_str = binarytoHexString(sender_shared_secret);
+
+
+        KeySpec spec = new PBEKeySpec(sender_shared_secret_str.toCharArray(), salt, 65536, 128);
         SecretKeyFactory f = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
         byte[] key = f.generateSecret(spec).getEncoded();
         SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
 
-        String xsecretkeyspec = Base64.encodeToString(bytes, Base64.DEFAULT);
+        String xsecretkeyspec = Base64.encodeToString(kunci_private_sender, Base64.DEFAULT);
         Log.d("kunci stlh UTF-8", xsecretkeyspec);
 
         String xxsecretkeyspec = Base64.encodeToString(key, Base64.DEFAULT);
         Log.d("kunci enkripsi base64", xxsecretkeyspec);
 
-        String s = new String(bytes, "US-ASCII");
+        String s = new String(kunci_private_sender, "US-ASCII");
         Log.d("kunci stlh UTF-8 ASCII", s);
 
         String x = new String(key, "US-ASCII");
@@ -586,5 +622,37 @@ public class ChatActivity extends AppCompatActivity {
 
         return secretKeySpec;
 
+    }
+
+    static private String binarytoHexString(byte[] binary)
+    {
+        StringBuilder sb = new StringBuilder(binary.length*2);
+
+        // Go backwards (left to right in the string) since typically you print the low-order
+        // bytes to the right.
+        for (int i = binary.length-1; i >= 0; i--) {
+            // High nibble first, i.e., to the left.
+            // Note that bytes are signed in Java. However, "int x = abyte&0xff" will always
+            // return an int value of x between 0 and 255.
+            // "int v = binary[i]>>4" (without &0xff) does *not* work.
+            int v = (binary[i]&0xff)>>4;
+            char c;
+            if (v < 10) {
+                c = (char) ('0'+v);
+            } else {
+                c = (char) ('a'+v-10);
+            }
+            sb.append(c);
+            // low nibble
+            v = binary[i]&0x0f;
+            if (v < 10) {
+                c = (char) ('0'+v);
+            } else {
+                c = (char) ('a'+v-10);
+            }
+            sb.append(c);
+        }
+
+        return sb.toString();
     }
 }
