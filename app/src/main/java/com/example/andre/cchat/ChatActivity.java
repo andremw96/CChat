@@ -457,8 +457,8 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
         alert.setTitle("Enkripsi Pesan");
         alert.setView(inflator);
 
-        final EditText editTextPesanEnkripsi = (EditText) inflator.findViewById(R.id.edit_pesan_enkripsi);
-        final EditText editKunciEnkripsi = (EditText) inflator.findViewById(R.id.edit_kunci_enkripsi); //ini kunci privatenya
+        final EditText editTextPesanEnkripsi = (EditText) inflator.findViewById(R.id.edit_pesan);
+        final EditText editKunciEnkripsi = (EditText) inflator.findViewById(R.id.edit_kunci); //ini kunci privatenya
 
         editTextPesanEnkripsi.setText(messageText);
 
@@ -851,14 +851,14 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
         System.out.println(pesanTerenkripsi);
 
         LayoutInflater linf = LayoutInflater.from(this);
-        final View inflator = linf.inflate(R.layout.dekripsi_dialog, null);
+        final View inflator = linf.inflate(R.layout.update_dialog, null);
         AlertDialog.Builder alert = new AlertDialog.Builder(this);
 
         alert.setTitle("Dekripsi Pesan");
         alert.setView(inflator);
 
-        final EditText editTextPesanDekripsi = (EditText) inflator.findViewById(R.id.edit_pesan_dekripsi);
-        final EditText editKunciDekripsi = (EditText) inflator.findViewById(R.id.edit_kunci_dekripsi); //ini kunci privatenya
+        final EditText editTextPesanDekripsi = (EditText) inflator.findViewById(R.id.edit_pesan);
+        final EditText editKunciDekripsi = (EditText) inflator.findViewById(R.id.edit_kunci); //ini kunci privatenya
 
         editTextPesanDekripsi.setText(pesanTerenkripsi);
 
