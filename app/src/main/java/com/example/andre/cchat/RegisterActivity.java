@@ -1,6 +1,8 @@
 package com.example.andre.cchat;
 
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -107,6 +109,8 @@ public class RegisterActivity extends AppCompatActivity {
                 String your_private_key_str = binarytoHexString(your_private_key);
                 your_public_key_str = binarytoHexString(your_public_key);
                 registerUserPrivateKey.setText(your_private_key_str);
+
+                Toast.makeText(RegisterActivity.this, "Silahkan Simpan Kunci Private anda", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -115,11 +119,29 @@ public class RegisterActivity extends AppCompatActivity {
             public void onClick(View view)
             {
                 final String name = registerUserName.getText().toString();
-                String email = registerUserEmail.getText().toString();
-                String pwd = registerUserPassword.getText().toString();
-                String public_key = your_public_key_str;
+                final String email = registerUserEmail.getText().toString();
+                final String pwd = registerUserPassword.getText().toString();
+                final String public_key = your_public_key_str;
 
-                DaftarkanAkun(name, email, pwd, public_key);
+                AlertDialog.Builder alert = new AlertDialog.Builder(RegisterActivity.this);
+                alert.setTitle("Konfirmasi");
+                alert.setMessage("Apakah Anda sudah Menyimpan Kunci Private anda?");
+                alert.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener()
+                {
+                    public void onClick(DialogInterface dialog, int whichButton)
+                    {
+                        DaftarkanAkun(name, email, pwd, public_key);
+                    }
+                });
+
+                alert.setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                        dialog.cancel();
+                    }
+                });
+
+                alert.show();
+
             }
         });
 

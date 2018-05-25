@@ -31,7 +31,7 @@
         android:id="@+id/textViewKunciPublikReceiver"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="8sp"
-        android:visibility="gone" />
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+        android:visibility="visible" />
 
 </LinearLayout>

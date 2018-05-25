@@ -75,8 +75,19 @@ import javax.crypto.spec.SecretKeySpec;
 
 import de.frank_durr.ecdh_curve25519.ECDHCurve25519;
 import de.hdodenhof.circleimageview.CircleImageView;
+import okio.ByteString;
 
 public class ChatActivity extends AppCompatActivity implements MessagesAdapter.ClickListener{
+    public static final String TAG = ECDHCurve25519.class.getName();
+
+    static {
+        try {
+            System.loadLibrary("ecdhcurve25519");
+            Log.i(TAG, "Loaded ecdhcurve25519 library.");
+        } catch (UnsatisfiedLinkError e) {
+            Log.e(TAG, e.getMessage());
+        }
+    }
 
     private static String messageReceiverId;
     private String messageReceiverName;
@@ -114,7 +125,7 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
 
     private String outputString;
     private String pesanTerenkripsi;
-    private String public_key_receiver_hex;
+    //private String public_key_B_hex;
     private String AES = "AES/CBC/PKCS5Padding";
 
 
@@ -736,18 +747,18 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
         final View inflator = linf.inflate(R.layout.update_dialog, null);
         AlertDialog.Builder alert = new AlertDialog.Builder(this);
 
-        final TextView viewKunciPublikReceiver = (TextView) inflator.findViewById(R.id.textViewKunciPublikReceiver);
+        final TextView viewKunciPublikB = (TextView) inflator.findViewById(R.id.textViewKunciPublikReceiver);
 
         DatabaseReference getUserDataReference = FirebaseDatabase.getInstance().getReference().child("Users").child(messageReceiverId);
         getUserDataReference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                String kunci_public_receiver_hexa = dataSnapshot.child("user_public_key").getValue().toString(); // kunci publik bentuknya HEXA
+                String kunci_public_B_hexa = dataSnapshot.child("user_public_key").getValue().toString(); // kunci publik bentuknya HEXA
 
-                if (kunci_public_receiver_hexa != null)
+                if (kunci_public_B_hexa != null)
                 {
-                    Log.d("kuncipublicreceiverhex", kunci_public_receiver_hexa);
-                    viewKunciPublikReceiver.setText(kunci_public_receiver_hexa);
+                    Log.d("kuncipublicBhex", kunci_public_B_hexa);
+                    viewKunciPublikB.setText(kunci_public_B_hexa);
                 }
                 else
                 {
@@ -761,29 +772,34 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
             }
         });
 
-        public_key_receiver_hex = viewKunciPublikReceiver.getText().toString();
-        Log.d("public_key_receiver_hex", public_key_receiver_hex);
+        String public_key_B_hex = viewKunciPublikB.getText().toString(); //"648cbf2cd95f5227f499eb4c6b08df38c37cda325cec80bc85334475f56a16ff";//
+        Log.d("publickeyBhex", public_key_B_hex);
 
-        byte[] kunci_public_receiver = public_key_receiver_hex.getBytes("UTF-8"); // kunci public user receiver
-        byte[] kunci_private_sender = password.getBytes("UTF-8"); // kunci privatenya user sender
+        byte[] kunci_public_B = ByteString.decodeHex(public_key_B_hex).toByteArray(); // kunci public user B
+        byte[] kunci_private_A = ByteString.decodeHex(password).toByteArray(); // kunci privatenya user A
 
-        byte[] sender_shared_secret = ECDHCurve25519.generate_shared_secret(kunci_private_sender, kunci_public_receiver);
+       // System.out.println(Arrays.toString(kunci_public_B));
+       //// System.out.println(Arrays.toString(kunci_private_A));
 
-        String sender_shared_secret_str = binarytoHexString(sender_shared_secret);
+        byte[] shared_secret = ECDHCurve25519.generate_shared_secret(kunci_private_A, kunci_public_B);
+
+        String shared_secret_str = binarytoHexString(shared_secret);
+
+        Log.d("shared_secret_str", shared_secret_str);
 
 
-        KeySpec spec = new PBEKeySpec(sender_shared_secret_str.toCharArray(), salt, 65536, 128);
+        KeySpec spec = new PBEKeySpec(shared_secret_str.toCharArray(), salt, 65536, 128);
         SecretKeyFactory f = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
         byte[] key = f.generateSecret(spec).getEncoded();
         SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
 
-        String xsecretkeyspec = Base64.encodeToString(kunci_private_sender, Base64.DEFAULT);
+        String xsecretkeyspec = Base64.encodeToString(kunci_private_A, Base64.DEFAULT);
         Log.d("kunci stlh UTF-8", xsecretkeyspec);
 
         String xxsecretkeyspec = Base64.encodeToString(key, Base64.DEFAULT);
         Log.d("kunci enkripsi base64", xxsecretkeyspec);
 
-        String s = new String(kunci_private_sender, "US-ASCII");
+        String s = new String(kunci_private_A, "US-ASCII");
         Log.d("kunci stlh UTF-8 ASCII", s);
 
         String x = new String(key, "US-ASCII");
@@ -864,7 +880,8 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
                 }
                 else {
                     try {
-                        //    outputString = ChatActivity.decrypt(messageText, inputPassword);
+                            outputString = decrypt(messageText, inputPassword);
+                        Toast.makeText(ChatActivity.this, outputString, Toast.LENGTH_LONG).show();
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
