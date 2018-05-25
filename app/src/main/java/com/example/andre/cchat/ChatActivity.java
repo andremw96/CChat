@@ -724,7 +724,7 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
         byte[] ct = Arrays.copyOfRange(decodeValue, 32, decodeValue.length);
 
         SecretKeySpec key = generateKey(password, salt);
-        Cipher c = Cipher.getInstance("AES/CBC/PKCS5Padding");
+        Cipher c = Cipher.getInstance(AES);
 
         c.init(Cipher.DECRYPT_MODE, key, new IvParameterSpec(iv));
         byte[] plaintext = c.doFinal(ct);
@@ -772,14 +772,14 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
             }
         });
 
-        String public_key_B_hex = viewKunciPublikB.getText().toString(); //"648cbf2cd95f5227f499eb4c6b08df38c37cda325cec80bc85334475f56a16ff";//
+        String public_key_B_hex = "648cbf2cd95f5227f499eb4c6b08df38c37cda325cec80bc85334475f56a16ff";//viewKunciPublikB.getText().toString(); //"648cbf2cd95f5227f499eb4c6b08df38c37cda325cec80bc85334475f56a16ff";//
         Log.d("publickeyBhex", public_key_B_hex);
 
         byte[] kunci_public_B = ByteString.decodeHex(public_key_B_hex).toByteArray(); // kunci public user B
         byte[] kunci_private_A = ByteString.decodeHex(password).toByteArray(); // kunci privatenya user A
 
-       // System.out.println(Arrays.toString(kunci_public_B));
-       //// System.out.println(Arrays.toString(kunci_private_A));
+        System.out.println(Arrays.toString(kunci_public_B));
+        System.out.println(Arrays.toString(kunci_private_A));
 
         byte[] shared_secret = ECDHCurve25519.generate_shared_secret(kunci_private_A, kunci_public_B);
 
@@ -869,6 +869,7 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
                 String inputPassword = editKunciDekripsi.getText().toString(); //ini kunci privatenya
 
                 Log.d("messageText", messageText);
+                Log.d("inputPassword", inputPassword);
 
                 if(TextUtils.isEmpty(messageText))
                 {
@@ -880,7 +881,7 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
                 }
                 else {
                     try {
-                            outputString = decrypt(messageText, inputPassword);
+                        outputString = decrypt(messageText, inputPassword);
                         Toast.makeText(ChatActivity.this, outputString, Toast.LENGTH_LONG).show();
                     } catch (Exception e) {
                         e.printStackTrace();

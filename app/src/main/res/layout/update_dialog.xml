@@ -24,7 +24,7 @@
         android:id="@+id/edit_kunci"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Kunci Enkripsi..."
+        android:hint="Kunci..."
         android:inputType="textPassword" />
 
     <TextView
@@ -32,6 +32,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-        android:visibility="gone" />
+        android:visibility="invisible" />
 
 </LinearLayout>
