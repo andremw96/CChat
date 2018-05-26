@@ -74,7 +74,8 @@
         android:layout_above="@+id/buat_akun_button"
         android:layout_centerHorizontal="true"
         android:ems="10"
-        android:inputType="text|textMultiLine"
+        android:inputType="none"
+        android:textIsSelectable="true"
         android:textAlignment="center"
         android:textColor="@android:color/holo_red_dark" />
 

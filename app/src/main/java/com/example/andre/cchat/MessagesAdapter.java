@@ -119,7 +119,7 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.Messag
                 holder.messageText.setTextColor(Color.BLACK);
                 holder.messageText.setGravity(Gravity.RIGHT);
 
-             //  holder.userProfileImage.setVisibility(View.INVISIBLE);
+                holder.userProfileImage.setVisibility(View.INVISIBLE);
 
             }
             else
@@ -128,7 +128,7 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.Messag
                 holder.messageText.setTextColor(Color.WHITE);
                 holder.messageText.setGravity(Gravity.LEFT);
 
-               // holder.userProfileImage.setVisibility(View.VISIBLE);
+                holder.userProfileImage.setVisibility(View.VISIBLE);
             }
 
             holder.messageText.setText(messages.getMessage());

@@ -96,6 +96,7 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
 
     private TextView userNameTitle;
     private TextView userLastSeen;
+    private TextView tempPublicKey;
     private CircleImageView userChatProfileImage;
 
     private ImageButton sendMessageButton;
@@ -125,7 +126,7 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
 
     private String outputString;
     private String pesanTerenkripsi;
-    //private String public_key_B_hex;
+    String public_key_B_hex;
     private String AES = "AES/CBC/PKCS5Padding";
 
 
@@ -189,6 +190,9 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
         userNameTitle = (TextView) findViewById(R.id.custom_chat_profile_name);
         userLastSeen = (TextView) findViewById(R.id.custom_chat_user_last_seen);
         userChatProfileImage = (CircleImageView) findViewById(R.id.custom_chat_profile_image);
+        tempPublicKey = (TextView) findViewById(R.id.textTempPublicKey);
+
+        tempPublicKey.setText("TEMPORARY PUBLIC KEY");
 
         // ngambil nama dan ditampilin ke texxtview
         userNameTitle.setText(messageReceiverName);
@@ -211,10 +215,18 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
 
                     // convert data to long
                     long last_seen = Long.parseLong(online);
+                    System.out.printf("last_seen "+last_seen);
 
-                    String lastSeenDisplayTime = getTime.getTimeAgo(last_seen, getApplicationContext()).toString();
-
-                    userLastSeen.setText(lastSeenDisplayTime);
+                    if (last_seen != 0)
+                    {
+                        String lastSeenDisplayTime = getTime.getTimeAgo(last_seen, getApplicationContext()).toString();
+                        System.out.printf("lastSeenDisplayTime "+lastSeenDisplayTime);
+                        userLastSeen.setText(lastSeenDisplayTime);
+                    }
+                    else
+                    {
+                        userLastSeen.setText("Online");
+                    }
                 }
 
                 // load images offline
@@ -312,8 +324,34 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
 
         FetchMessages();
 
+        DatabaseReference getUserDataReference = FirebaseDatabase.getInstance().getReference().child("Users").child(messageReceiverId);
+        getUserDataReference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                String kunci_public_B_hexa = dataSnapshot.child("user_public_key").getValue().toString(); // kunci publik bentuknya HEXA
+
+                if (kunci_public_B_hexa != null)
+                {
+                    tempPublicKey.setText(kunci_public_B_hexa);
+                    // String tempPublicKeyString = tempPublicKey.getText().toString();
+                }
+                else
+                {
+                    Toast.makeText(ChatActivity.this, "User tersebut tidak punya kunci publik, tidak bisa enkripsi pesan", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
     }
-/*
+
+    /*
     @Override
     protected void onStart() {
         super.onStart();
@@ -481,7 +519,8 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
                 }
                 else {
                     try {
-                        outputString = encrypt(messageText, inputPassword);
+                        outputString = (encrypt(messageText, inputPassword)).trim();
+                        inputMessageText.setEnabled(false);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -743,47 +782,43 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
 
     private SecretKeySpec generateKey(String password, byte[] salt) throws Exception
     {
-        LayoutInflater linf = LayoutInflater.from(this);
-        final View inflator = linf.inflate(R.layout.update_dialog, null);
-        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        //String private_key_a_hex = "D09280F20000000000B478AA7D76370F000059000000430034E39EBF7D76374F";
+       // String public_key_a_hex = "0D3028981B0CC6968F7DA1B316170B77E4AD362AFD31967C27BE74D8B45DBE7F";
+      //  String private_key_b_hex = "18990FF50600000000B478AA00D59EBF000059000000430034E39EBF7D76374F";
 
-        final TextView viewKunciPublikB = (TextView) inflator.findViewById(R.id.textViewKunciPublikReceiver);
 
-        DatabaseReference getUserDataReference = FirebaseDatabase.getInstance().getReference().child("Users").child(messageReceiverId);
-        getUserDataReference.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                String kunci_public_B_hexa = dataSnapshot.child("user_public_key").getValue().toString(); // kunci publik bentuknya HEXA
+        //byte[] kunci_private_a = hexStringToByteArray(private_key_a_hex);
+        //byte[] kunci_public_a = hexStringToByteArray(public_key_a_hex);
 
-                if (kunci_public_B_hexa != null)
-                {
-                    Log.d("kuncipublicBhex", kunci_public_B_hexa);
-                    viewKunciPublikB.setText(kunci_public_B_hexa);
-                }
-                else
-                {
-                    Toast.makeText(ChatActivity.this, "User tersebut tidak punya kunci publik, tidak bisa enkripsi pesan", Toast.LENGTH_SHORT).show();
-                }
-            }
+       // byte[] kunci_private_b = hexStringToByteArray(private_key_b_hex);
 
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
 
-            }
-        });
+       // System.out.println(Arrays.toString(kunci_private_a));
+       // System.out.println(Arrays.toString(kunci_public_a));
 
-        String public_key_B_hex = "648cbf2cd95f5227f499eb4c6b08df38c37cda325cec80bc85334475f56a16ff";//viewKunciPublikB.getText().toString(); //"648cbf2cd95f5227f499eb4c6b08df38c37cda325cec80bc85334475f56a16ff";//
-        Log.d("publickeyBhex", public_key_B_hex);
+       // System.out.println(Arrays.toString(kunci_private_b));
+      //  System.out.println(Arrays.toString(kunci_public_B));
 
-        byte[] kunci_public_B = ByteString.decodeHex(public_key_B_hex).toByteArray(); // kunci public user B
-        byte[] kunci_private_A = ByteString.decodeHex(password).toByteArray(); // kunci privatenya user A
+       // byte[] shared_secret_A = ECDHCurve25519.generate_shared_secret(kunci_private_a, kunci_public_B);
+        //byte[] shared_secret_B = ECDHCurve25519.generate_shared_secret(kunci_private_b, kunci_public_a);
 
-        System.out.println(Arrays.toString(kunci_public_B));
-        System.out.println(Arrays.toString(kunci_private_A));
+        // sharedsecreta != sharedsecretB
 
-        byte[] shared_secret = ECDHCurve25519.generate_shared_secret(kunci_private_A, kunci_public_B);
+      //  String shared_secret_A_str = bytesToHex(shared_secret_A);
+       // String shared_secret_B_str = bytesToHex(shared_secret_B);
+       // Log.d("shared_secret_A_str", shared_secret_A_str);
+       // Log.d("shared_secret_B_str", shared_secret_B_str);
 
-        String shared_secret_str = binarytoHexString(shared_secret);
+        String public_key_user2 = tempPublicKey.getText().toString();
+        Log.d("public_key_user2", public_key_user2);
+
+        byte[] kunci_public_user2 = hexStringToByteArray(public_key_user2); // kunci public user 2
+
+        byte[] kunci_private_user1 = hexStringToByteArray(password); // kunci privatenya user 1
+
+        byte[] shared_secret = ECDHCurve25519.generate_shared_secret(kunci_private_user1, kunci_public_user2);
+
+        String shared_secret_str = bytesToHex(shared_secret);
 
         Log.d("shared_secret_str", shared_secret_str);
 
@@ -793,52 +828,29 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
         byte[] key = f.generateSecret(spec).getEncoded();
         SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
 
-        String xsecretkeyspec = Base64.encodeToString(kunci_private_A, Base64.DEFAULT);
-        Log.d("kunci stlh UTF-8", xsecretkeyspec);
-
-        String xxsecretkeyspec = Base64.encodeToString(key, Base64.DEFAULT);
-        Log.d("kunci enkripsi base64", xxsecretkeyspec);
-
-        String s = new String(kunci_private_A, "US-ASCII");
-        Log.d("kunci stlh UTF-8 ASCII", s);
-
-        String x = new String(key, "US-ASCII");
-        Log.d("kunci enkripsi ASCII", x);
-
         return secretKeySpec;
 
     }
 
-    static private String binarytoHexString(byte[] binary)
-    {
-        StringBuilder sb = new StringBuilder(binary.length*2);
-
-        // Go backwards (left to right in the string) since typically you print the low-order
-        // bytes to the right.
-        for (int i = binary.length-1; i >= 0; i--) {
-            // High nibble first, i.e., to the left.
-            // Note that bytes are signed in Java. However, "int x = abyte&0xff" will always
-            // return an int value of x between 0 and 255.
-            // "int v = binary[i]>>4" (without &0xff) does *not* work.
-            int v = (binary[i]&0xff)>>4;
-            char c;
-            if (v < 10) {
-                c = (char) ('0'+v);
-            } else {
-                c = (char) ('a'+v-10);
-            }
-            sb.append(c);
-            // low nibble
-            v = binary[i]&0x0f;
-            if (v < 10) {
-                c = (char) ('0'+v);
-            } else {
-                c = (char) ('a'+v-10);
-            }
-            sb.append(c);
+    private final static char[] hexArray = "0123456789ABCDEF".toCharArray();
+    public static String bytesToHex(byte[] bytes) {
+        char[] hexChars = new char[bytes.length * 2];
+        for ( int j = 0; j < bytes.length; j++ ) {
+            int v = bytes[j] & 0xFF;
+            hexChars[j * 2] = hexArray[v >>> 4];
+            hexChars[j * 2 + 1] = hexArray[v & 0x0F];
         }
+        return new String(hexChars);
+    }
 
-        return sb.toString();
+    public static byte[] hexStringToByteArray(String s) {
+        int len = s.length();
+        byte[] data = new byte[len / 2];
+        for (int i = 0; i < len; i += 2) {
+            data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
+                    + Character.digit(s.charAt(i+1), 16));
+        }
+        return data;
     }
 
     @Override
@@ -861,6 +873,7 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
         final EditText editKunciDekripsi = (EditText) inflator.findViewById(R.id.edit_kunci); //ini kunci privatenya
 
         editTextPesanDekripsi.setText(pesanTerenkripsi);
+        editTextPesanDekripsi.setEnabled(false);
 
         alert.setPositiveButton("ok", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton)
@@ -882,7 +895,13 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
                 else {
                     try {
                         outputString = decrypt(messageText, inputPassword);
-                        Toast.makeText(ChatActivity.this, outputString, Toast.LENGTH_LONG).show();
+                        Toast vwToast = Toast.makeText(ChatActivity.this, "Hasil dekripsi pesan :"+"\n"+outputString, Toast.LENGTH_LONG);
+                        TextView tv = (TextView) vwToast.getView().findViewById(android.R.id.message);
+                        if( tv != null) {
+                            tv.setGravity(Gravity.CENTER);
+                        }
+                        vwToast.show();
+                        //Toast.makeText(ChatActivity.this, "Hasil dekripsi pesan :"+"\n"+outputString, Toast.LENGTH_LONG).show();
                     } catch (Exception e) {
                         e.printStackTrace();
                     }

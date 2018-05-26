@@ -84,7 +84,7 @@ public class RegisterActivity extends AppCompatActivity {
             public void onClick(View view) {
                 SecureRandom random = new SecureRandom();
                 byte[] your_private_key = ECDHCurve25519.generate_secret_key(random);
-                Log.d("a private key hex", binarytoHexString(your_private_key));
+                Log.d("a private key hex", bytesToHex(your_private_key));
 
                 try {
                     String s = new String(your_private_key, "US-ASCII");
@@ -96,7 +96,7 @@ public class RegisterActivity extends AppCompatActivity {
 
                 // Create Alice's public key.
                 byte[] your_public_key = ECDHCurve25519.generate_public_key(your_private_key);
-                Log.d("a public key hex", binarytoHexString(your_public_key));
+                Log.d("a public key hex", bytesToHex(your_public_key));
 
                 try {
                     String x = new String(your_public_key, "US-ASCII");
@@ -106,8 +106,8 @@ public class RegisterActivity extends AppCompatActivity {
                 }
 
                 // masih bentuk HEXA
-                String your_private_key_str = binarytoHexString(your_private_key);
-                your_public_key_str = binarytoHexString(your_public_key);
+                String your_private_key_str = bytesToHex(your_private_key);
+                your_public_key_str = bytesToHex(your_public_key);
                 registerUserPrivateKey.setText(your_private_key_str);
 
                 Toast.makeText(RegisterActivity.this, "Silahkan Simpan Kunci Private anda", Toast.LENGTH_SHORT).show();
@@ -224,35 +224,14 @@ public class RegisterActivity extends AppCompatActivity {
         }
     }
 
-    static private String binarytoHexString(byte[] binary)
-    {
-        StringBuilder sb = new StringBuilder(binary.length*2);
-
-        // Go backwards (left to right in the string) since typically you print the low-order
-        // bytes to the right.
-        for (int i = binary.length-1; i >= 0; i--) {
-            // High nibble first, i.e., to the left.
-            // Note that bytes are signed in Java. However, "int x = abyte&0xff" will always
-            // return an int value of x between 0 and 255.
-            // "int v = binary[i]>>4" (without &0xff) does *not* work.
-            int v = (binary[i]&0xff)>>4;
-            char c;
-            if (v < 10) {
-                c = (char) ('0'+v);
-            } else {
-                c = (char) ('a'+v-10);
-            }
-            sb.append(c);
-            // low nibble
-            v = binary[i]&0x0f;
-            if (v < 10) {
-                c = (char) ('0'+v);
-            } else {
-                c = (char) ('a'+v-10);
-            }
-            sb.append(c);
+    private final static char[] hexArray = "0123456789ABCDEF".toCharArray();
+    public static String bytesToHex(byte[] bytes) {
+        char[] hexChars = new char[bytes.length * 2];
+        for ( int j = 0; j < bytes.length; j++ ) {
+            int v = bytes[j] & 0xFF;
+            hexChars[j * 2] = hexArray[v >>> 4];
+            hexChars[j * 2 + 1] = hexArray[v & 0x0F];
         }
-
-        return sb.toString();
+        return new String(hexChars);
     }
 }
