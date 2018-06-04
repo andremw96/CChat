@@ -708,6 +708,7 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
             notificationsReference.child(messageReceiverId).push().setValue(notificationsData);
 
             inputMessageText.setText("");
+            inputMessageText.setEnabled(true);
 
             rootRef.updateChildren(messageBodyDetails, new DatabaseReference.CompletionListener() {
                 @Override
