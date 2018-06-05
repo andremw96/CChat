@@ -19,6 +19,7 @@ import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
+import android.util.TimingLogger;
 import android.view.GestureDetector;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -519,7 +520,20 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
                 }
                 else {
                     try {
+                        //start
+                        long lStartTime = System.nanoTime();
+
+                        //task
                         outputString = (encrypt(messageText, inputPassword)).trim();
+
+                        //end
+                        long lEndTime = System.nanoTime();
+
+                        //time elapsed
+                        long output = lEndTime - lStartTime;
+
+                        System.out.println("Waktu Enkripsi dalam milliseconds: " + output / 1000000);
+
                         inputMessageText.setEnabled(false);
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -895,7 +909,20 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
                 }
                 else {
                     try {
+                        //start
+                        long lStartTime = System.nanoTime();
+
+                        //task
                         outputString = decrypt(messageText, inputPassword);
+
+                        //end
+                        long lEndTime = System.nanoTime();
+
+                        //time elapsed
+                        long output = lEndTime - lStartTime;
+
+                        System.out.println("Waktu Dekripsi dalam milliseconds: " + output / 1000000);
+
                         Toast vwToast = Toast.makeText(ChatActivity.this, "Hasil dekripsi pesan :"+"\n"+outputString, Toast.LENGTH_LONG);
                         TextView tv = (TextView) vwToast.getView().findViewById(android.R.id.message);
                         if( tv != null) {
