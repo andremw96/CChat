@@ -27,6 +27,7 @@ import com.google.firebase.iid.FirebaseInstanceId;
 
 import java.io.UnsupportedEncodingException;
 import java.security.SecureRandom;
+import java.util.concurrent.TimeUnit;
 
 import de.frank_durr.ecdh_curve25519.ECDHCurve25519;
 
@@ -82,6 +83,10 @@ public class RegisterActivity extends AppCompatActivity {
         generatePrivateKeyButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                //start
+                long lStartTime = System.nanoTime();
+
+                //task
                 SecureRandom random = new SecureRandom();
                 byte[] your_private_key = ECDHCurve25519.generate_secret_key(random);
                 Log.d("a private key hex", bytesToHex(your_private_key));
@@ -109,6 +114,19 @@ public class RegisterActivity extends AppCompatActivity {
                 String your_private_key_str = bytesToHex(your_private_key);
                 your_public_key_str = bytesToHex(your_public_key);
                 registerUserPrivateKey.setText(your_private_key_str);
+
+                //end
+                long lEndTime = System.nanoTime();
+
+                //time elapsed
+                long output = lEndTime - lStartTime;
+
+  //              long durationInMs = TimeUnit.NANOSECONDS.toMillis(output);
+
+                System.out.println("Waktu Menghasilkan Kunci dalam milliseconds: " + output / 1000000);
+
+//                System.out.println("Waktu Menghasilkan Kunci dalam milliseconds 2: " + durationInMs);
+
 
                 Toast.makeText(RegisterActivity.this, "Silahkan Simpan Kunci Private anda", Toast.LENGTH_SHORT).show();
             }
