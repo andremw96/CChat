@@ -67,8 +67,13 @@
             android:id="@+id/textTempPublicKey"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:visibility="gone"/>
+            android:visibility="gone" />
 
+        <TextView
+            android:id="@+id/textTempPrivateKey"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone" />
 
     </LinearLayout>
 

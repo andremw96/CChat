@@ -65,7 +65,8 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/register_password"
         android:layout_centerHorizontal="true"
-        android:text="Hasilkan Kunci Privat Milikmu" />
+        android:text="Hasilkan Kunci Privat Milikmu"
+        android:visibility="gone" />
 
     <EditText
         android:id="@+id/register_private_key"
@@ -75,8 +76,9 @@
         android:layout_centerHorizontal="true"
         android:ems="10"
         android:inputType="none"
-        android:textIsSelectable="true"
         android:textAlignment="center"
-        android:textColor="@android:color/holo_red_dark" />
+        android:textColor="@android:color/holo_red_dark"
+        android:textIsSelectable="true"
+        android:visibility="gone" />
 
 </RelativeLayout>

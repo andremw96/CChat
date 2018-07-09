@@ -39,7 +39,12 @@ import android.support.v7.widget.Toolbar;
 
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthCredential;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.EmailAuthCredential;
+import com.google.firebase.auth.EmailAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
@@ -49,6 +54,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ServerValue;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -98,6 +104,7 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
     private TextView userNameTitle;
     private TextView userLastSeen;
     private TextView tempPublicKey;
+    private TextView tempPrivateKey;
     private CircleImageView userChatProfileImage;
 
     private ImageButton sendMessageButton;
@@ -111,6 +118,7 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
 
     private FirebaseAuth mAuth;
     private static String messageSenderID;
+    private static String messageSenderEmail;
 
     private RecyclerView userMessagesList;
 
@@ -127,7 +135,6 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
 
     private String outputString;
     private String pesanTerenkripsi;
-    String public_key_B_hex;
     private String AES = "AES/CBC/PKCS5Padding";
 
 
@@ -143,6 +150,7 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
 
         mAuth = FirebaseAuth.getInstance();
         messageSenderID = mAuth.getCurrentUser().getUid();
+        messageSenderEmail = mAuth.getCurrentUser().getEmail();
 
         if ( (getIntent().getExtras().get("visit_user_id").toString() != null) && (getIntent().getExtras().get("user_name").toString() != null) ) {
             messageReceiverId = getIntent().getExtras().get("visit_user_id").toString();
@@ -192,6 +200,7 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
         userLastSeen = (TextView) findViewById(R.id.custom_chat_user_last_seen);
         userChatProfileImage = (CircleImageView) findViewById(R.id.custom_chat_profile_image);
         tempPublicKey = (TextView) findViewById(R.id.textTempPublicKey);
+        tempPrivateKey = (TextView) findViewById(R.id.textTempPrivateKey);
 
         tempPublicKey.setText("TEMPORARY PUBLIC KEY");
 
@@ -342,14 +351,43 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
                 }
             }
 
-
-
             @Override
             public void onCancelled(DatabaseError databaseError) {
 
             }
         });
 
+        DatabaseReference getUserDataReference2 = FirebaseDatabase.getInstance().getReference().child("Users").child(messageSenderID);
+        getUserDataReference2.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                String encryptedprivatekey = dataSnapshot.child("user_private_key").getValue().toString(); // kunci private bentuknya HEXA
+                Log.d("encrypted private key", encryptedprivatekey);
+
+                try {
+                    String decryptedprivatekey = decryptPrivateKey(encryptedprivatekey, messageSenderEmail);
+
+                    if (encryptedprivatekey != null)
+                    {
+                        tempPrivateKey.setText(decryptedprivatekey);
+                        Log.d("decrypted private key", decryptedprivatekey);
+                        // String tempPublicKeyString = tempPublicKey.getText().toString();
+                    }
+                    else
+                    {
+                        Toast.makeText(ChatActivity.this, "User tersebut tidak punya kunci publik, tidak bisa enkripsi pesan", Toast.LENGTH_SHORT).show();
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
     }
 
     /*
@@ -486,8 +524,9 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
     }*/
 
 
-    private void showUpdateDialog(){
+    private void showUpdateDialog(){ // dialog enkripsi
         String messageText = inputMessageText.getText().toString();
+        String privateKey = tempPrivateKey.getText().toString();
 
         LayoutInflater linf = LayoutInflater.from(this);
         final View inflator = linf.inflate(R.layout.update_dialog, null);
@@ -497,18 +536,27 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
         alert.setView(inflator);
 
         final EditText editTextPesanEnkripsi = (EditText) inflator.findViewById(R.id.edit_pesan);
-        final EditText editKunciEnkripsi = (EditText) inflator.findViewById(R.id.edit_kunci); //ini kunci privatenya
+        final EditText editPwdUser = (EditText) inflator.findViewById(R.id.edit_kunci); //ini password user
+        final EditText editPrivateKey = (EditText) inflator.findViewById(R.id.edit_kunci_private); //ini kunci private user
+        final Button btnDekripsi = (Button) inflator.findViewById(R.id.btn_dekrip_pesan);
+        final TextView txtPesanTerdekripsi = (TextView) inflator.findViewById(R.id.txtPesanTerdekripsi);
+
+        btnDekripsi.setVisibility(View.GONE);
+        txtPesanTerdekripsi.setVisibility(View.GONE);
 
         editTextPesanEnkripsi.setText(messageText);
+        editPrivateKey.setText(privateKey);
 
         alert.setPositiveButton("ok", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton)
             {
-                String messageText = editTextPesanEnkripsi.getText().toString();
-                String inputPassword = editKunciEnkripsi.getText().toString(); //ini kunci privatenya
+                final String messageText = editTextPesanEnkripsi.getText().toString();
+                final String inputPassword = editPwdUser.getText().toString(); //ini password user
+                final String privateKey = editPrivateKey.getText().toString();//ini kunci private
 
                 Log.d("messageText", messageText);
                 Log.d("inputPassword", inputPassword);
+                Log.d("private key", privateKey);
 
                 if(TextUtils.isEmpty(messageText))
                 {
@@ -516,29 +564,47 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
                 }
                 if(TextUtils.isEmpty(inputPassword))
                 {
-                    Toast.makeText(ChatActivity.this, "Silahkan Isi Kunci Anda", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ChatActivity.this, "Silahkan Isi Password Anda", Toast.LENGTH_SHORT).show();
                 }
                 else {
                     try {
-                        //start
-                        long lStartTime = System.nanoTime();
+                        mAuth.signInWithEmailAndPassword(messageSenderEmail, inputPassword).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
+                        @Override
+                        public void onComplete(@NonNull Task<AuthResult> task)
+                        {
+                            if(task.isSuccessful())
+                            {
+                                try {
+                                    //start
+                                    long lStartTime = System.nanoTime();
 
-                        //task
-                        outputString = (encrypt(messageText, inputPassword)).trim();
+                                    //task
+                                    outputString = (encrypt(messageText, privateKey)).trim();
 
-                        //end
-                        long lEndTime = System.nanoTime();
+                                    //end
+                                    long lEndTime = System.nanoTime();
 
-                        //time elapsed
-                        long output = lEndTime - lStartTime;
+                                    //time elapsed
+                                    long output = lEndTime - lStartTime;
 
-                        System.out.println("Waktu Enkripsi dalam milliseconds: " + output / 1000000);
+                                    System.out.println("Waktu Enkripsi dalam milliseconds: " + output / 1000000);
+
+                                    inputMessageText.setText(outputString);
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                            else
+                            {
+                                Toast.makeText(ChatActivity.this, "password tidak dikenali, silahkan Cek kembali password anda",
+                                        Toast.LENGTH_SHORT).show();
+                            }
+                        }});
 
                         inputMessageText.setEnabled(false);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-                    inputMessageText.setText(outputString);
                 }
             }
         });
@@ -847,6 +913,42 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
 
     }
 
+    public String decryptPrivateKey(String outputString, String password) throws Exception
+    {
+        byte[] decodeValue = Base64.decode(outputString, Base64.DEFAULT);
+
+        byte[] salt = Arrays.copyOfRange(decodeValue, 0, 16);
+        byte[] iv = Arrays.copyOfRange(decodeValue, 16, 32);
+        byte[] ct = Arrays.copyOfRange(decodeValue, 32, decodeValue.length);
+
+        SecretKeySpec key = generateKeyForPrivate(password, salt);
+        Cipher c = Cipher.getInstance(AES);
+
+        c.init(Cipher.DECRYPT_MODE, key, new IvParameterSpec(iv));
+        byte[] plaintext = c.doFinal(ct);
+        // c.init(Cipher.DECRYPT_MODE, key);
+
+        String x = new String(plaintext, "US-ASCII");
+        Log.d("pesan terdekripsi", x);
+
+        return new String(plaintext, "UTF-8");
+
+        // byte[] decValue = c.doFinal(decodeValue);
+        //  String decryptedValue = new String(decValue);
+        //  return decryptedValue;
+        // return null;
+    }
+
+    private SecretKeySpec generateKeyForPrivate(String password, byte[] salt) throws Exception
+    {
+        KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, 65536, 128);
+        SecretKeyFactory f = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
+        byte[] key = f.generateSecret(spec).getEncoded();
+        SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
+
+        return secretKeySpec;
+    }
+
     private final static char[] hexArray = "0123456789ABCDEF".toCharArray();
     public static String bytesToHex(byte[] bytes) {
         char[] hexChars = new char[bytes.length * 2];
@@ -870,11 +972,13 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
 
     @Override
     public void itemClicked(View view, int position) {
+
         String TAG = "messagePosition";
         Log.d(TAG, "You clicked on "+position);
 
         Messages messages = messageList.get(position);
         pesanTerenkripsi = messages.getMessage();
+        String privateKey = tempPrivateKey.getText().toString();
         System.out.println(pesanTerenkripsi);
 
         LayoutInflater linf = LayoutInflater.from(this);
@@ -885,19 +989,28 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
         alert.setView(inflator);
 
         final EditText editTextPesanDekripsi = (EditText) inflator.findViewById(R.id.edit_pesan);
-        final EditText editKunciDekripsi = (EditText) inflator.findViewById(R.id.edit_kunci); //ini kunci privatenya
+        final EditText editPwdUser = (EditText) inflator.findViewById(R.id.edit_kunci); //ini pass user
+        final EditText editKunciDekripsi = (EditText) inflator.findViewById(R.id.edit_kunci_private); //ini kunci private
+        final Button btnDekripsi = (Button) inflator.findViewById(R.id.btn_dekrip_pesan);
+        final TextView txtPesanTerdekripsi = (TextView) inflator.findViewById(R.id.txtPesanTerdekripsi);
+
+        btnDekripsi.setVisibility(View.VISIBLE);
+        txtPesanTerdekripsi.setVisibility(View.VISIBLE);
 
         editTextPesanDekripsi.setText(pesanTerenkripsi);
         editTextPesanDekripsi.setEnabled(false);
+        editKunciDekripsi.setText(privateKey);
 
-        alert.setPositiveButton("ok", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton)
-            {
-                String messageText = editTextPesanDekripsi.getText().toString();
-                String inputPassword = editKunciDekripsi.getText().toString(); //ini kunci privatenya
+        btnDekripsi.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                final String messageText = editTextPesanDekripsi.getText().toString();
+                final String inputPassword = editPwdUser.getText().toString();
+                final String privateKey = editKunciDekripsi.getText().toString();
 
                 Log.d("messageText", messageText);
                 Log.d("inputPassword", inputPassword);
+                Log.d("privateKey", privateKey);
 
                 if(TextUtils.isEmpty(messageText))
                 {
@@ -905,40 +1018,53 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
                 }
                 if(TextUtils.isEmpty(inputPassword))
                 {
-                    Toast.makeText(ChatActivity.this, "Silahkan Isi Kunci Anda", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ChatActivity.this, "Silahkan Isi Password Anda", Toast.LENGTH_SHORT).show();
                 }
                 else {
                     try {
-                        //start
-                        long lStartTime = System.nanoTime();
+                        mAuth.signInWithEmailAndPassword(messageSenderEmail, inputPassword).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
+                        @Override
+                        public void onComplete(@NonNull Task<AuthResult> task)
+                        {
+                            if(task.isSuccessful())
+                            {
+                                try
+                                {
+                                    //start
+                                    long lStartTime = System.nanoTime();
 
-                        //task
-                        outputString = decrypt(messageText, inputPassword);
+                                    //task
+                                    outputString = decrypt(messageText, privateKey);
+                                    txtPesanTerdekripsi.setText(outputString);
 
-                        //end
-                        long lEndTime = System.nanoTime();
+                                    //end
+                                    long lEndTime = System.nanoTime();
 
-                        //time elapsed
-                        long output = lEndTime - lStartTime;
+                                    //time elapsed
+                                    long output = lEndTime - lStartTime;
 
-                        System.out.println("Waktu Dekripsi dalam milliseconds: " + output / 1000000);
+                                    System.out.println("Waktu Dekripsi dalam milliseconds: " + output / 1000000);
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                            else
+                            {
+                                Toast.makeText(ChatActivity.this, "password tidak dikenali, silahkan Cek kembali password anda",
+                                        Toast.LENGTH_SHORT).show();
+                            }
 
-                        Toast vwToast = Toast.makeText(ChatActivity.this, "Hasil dekripsi pesan :"+"\n"+outputString, Toast.LENGTH_LONG);
-                        TextView tv = (TextView) vwToast.getView().findViewById(android.R.id.message);
-                        if( tv != null) {
-                            tv.setGravity(Gravity.CENTER);
+                            loadingBar.dismiss();
                         }
-                        vwToast.show();
-                        //Toast.makeText(ChatActivity.this, "Hasil dekripsi pesan :"+"\n"+outputString, Toast.LENGTH_LONG).show();
+                });
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-                    // inputMessageText.setText(outputString);
                 }
             }
         });
 
-        alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+        alert.setPositiveButton("ok", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {
                 dialog.cancel();
             }

@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.text.InputType;
 import android.text.TextUtils;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -25,9 +26,19 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.iid.FirebaseInstanceId;
 
+import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
+import java.security.AlgorithmParameters;
 import java.security.SecureRandom;
+import java.security.spec.KeySpec;
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
+
+import javax.crypto.Cipher;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.PBEKeySpec;
+import javax.crypto.spec.SecretKeySpec;
 
 import de.frank_durr.ecdh_curve25519.ECDHCurve25519;
 
@@ -58,6 +69,10 @@ public class RegisterActivity extends AppCompatActivity {
     private Button buatAkunButton;
 
     String your_public_key_str;
+    String encrypted_private_key;
+
+    private String AES = "AES/CBC/PKCS5Padding";
+    String email;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,7 +80,6 @@ public class RegisterActivity extends AppCompatActivity {
         setContentView(R.layout.activity_register);
 
         mAuth = FirebaseAuth.getInstance();
-
 
         mToolbar = (Toolbar) findViewById(R.id.register_toolbar);
         setSupportActionBar(mToolbar);
@@ -80,92 +94,86 @@ public class RegisterActivity extends AppCompatActivity {
         buatAkunButton = (Button) findViewById(R.id.buat_akun_button);
         loadingBar = new ProgressDialog(this);
 
-        generatePrivateKeyButton.setOnClickListener(new View.OnClickListener() {
+       /* generatePrivateKeyButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //start
-                long lStartTime = System.nanoTime();
 
-                //task
-                SecureRandom random = new SecureRandom();
-                byte[] your_private_key = ECDHCurve25519.generate_secret_key(random);
-                Log.d("a private key hex", bytesToHex(your_private_key));
-
-                try {
-                    String s = new String(your_private_key, "US-ASCII");
-                    Log.d("kunci privatnya", s);
-
-                } catch (UnsupportedEncodingException e) {
-                    e.printStackTrace();
-                }
-
-                // Create Alice's public key.
-                byte[] your_public_key = ECDHCurve25519.generate_public_key(your_private_key);
-                Log.d("a public key hex", bytesToHex(your_public_key));
-
-                try {
-                    String x = new String(your_public_key, "US-ASCII");
-                    Log.d("kunci publiknya", x);
-                } catch (UnsupportedEncodingException e) {
-                    e.printStackTrace();
-                }
-
-                // masih bentuk HEXA
-                String your_private_key_str = bytesToHex(your_private_key);
-                your_public_key_str = bytesToHex(your_public_key);
-                registerUserPrivateKey.setText(your_private_key_str);
-
-                //end
-                long lEndTime = System.nanoTime();
-
-                //time elapsed
-                long output = lEndTime - lStartTime;
-
-  //              long durationInMs = TimeUnit.NANOSECONDS.toMillis(output);
-
-                System.out.println("Waktu Menghasilkan Kunci dalam milliseconds: " + output / 1000000);
-
-//                System.out.println("Waktu Menghasilkan Kunci dalam milliseconds 2: " + durationInMs);
-
-
-                Toast.makeText(RegisterActivity.this, "Silahkan Simpan Kunci Private anda", Toast.LENGTH_SHORT).show();
             }
-        });
+        });*/
 
         buatAkunButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view)
             {
+
                 final String name = registerUserName.getText().toString();
-                final String email = registerUserEmail.getText().toString();
+                email = registerUserEmail.getText().toString();
                 final String pwd = registerUserPassword.getText().toString();
+
+                try {
+                    generateUserKey();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
                 final String public_key = your_public_key_str;
+                final String encrypted_priv_key = encrypted_private_key;
 
-                AlertDialog.Builder alert = new AlertDialog.Builder(RegisterActivity.this);
-                alert.setTitle("Konfirmasi");
-                alert.setMessage("Apakah Anda sudah Menyimpan Kunci Private anda?");
-                alert.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener()
-                {
-                    public void onClick(DialogInterface dialog, int whichButton)
-                    {
-                        DaftarkanAkun(name, email, pwd, public_key);
-                    }
-                });
+                Log.d("public key", public_key);
+                Log.d("encrypted priv key", encrypted_priv_key);
 
-                alert.setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int whichButton) {
-                        dialog.cancel();
-                    }
-                });
 
-                alert.show();
+                try {
+                    DaftarkanAkun(name, email, pwd, public_key, encrypted_priv_key);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
 
             }
         });
 
     }
 
-    private void DaftarkanAkun(final String name, String email, String pwd, final String public_key)
+
+    private void generateUserKey() throws Exception {
+        //start
+        long lStartTime = System.nanoTime();
+
+        //task
+        SecureRandom random = new SecureRandom();
+        byte[] your_private_key = ECDHCurve25519.generate_secret_key(random);
+        String your_private_key_str = bytesToHex(your_private_key);
+
+        // Create Alice's public key.
+        byte[] your_public_key = ECDHCurve25519.generate_public_key(your_private_key);
+        your_public_key_str = bytesToHex(your_public_key);
+
+        Log.d("emailnya", email);
+
+
+        // enkripsi privatekey dgn AES
+        encrypted_private_key = encrypt(your_private_key_str, email);
+
+
+        Log.d("kunci publiknya", your_public_key_str);
+        Log.d("kunci prviat sbm enkrip", your_private_key_str);
+        Log.d("kunci prviat sdh enkrip", encrypted_private_key);
+
+        //registerUserPrivateKey.setText(encrypted_private_key);
+
+        //end
+        long lEndTime = System.nanoTime();
+
+        //time elapsed
+        long output = lEndTime - lStartTime;
+
+        //              long durationInMs = TimeUnit.NANOSECONDS.toMillis(output);
+
+        System.out.println("Waktu Menghasilkan Kunci dalam milliseconds: " + output / 1000000);
+    }
+
+
+    private void DaftarkanAkun(final String name, String email, String pwd, final String public_key, final String encrypted_priv_key) throws Exception
     {
         // validasi mengecek apakaah field kosong atau tidak
         if(TextUtils.isEmpty(name))
@@ -185,7 +193,12 @@ public class RegisterActivity extends AppCompatActivity {
 
         if(TextUtils.isEmpty(public_key))
         {
-            Toast.makeText(RegisterActivity.this, "Silahkan tekan tombol 'Hasilkan Kunci Privat Milikmu', dan salin kunci anda ", Toast.LENGTH_LONG).show();
+            Toast.makeText(RegisterActivity.this, "Ada Kesalahan, Mohon Coba Lagi.... ", Toast.LENGTH_LONG).show();
+        }
+
+        if(TextUtils.isEmpty(encrypted_priv_key))
+        {
+            Toast.makeText(RegisterActivity.this, "Ada Kesalahan, Mohon Coba Lagi Lagi.... ", Toast.LENGTH_LONG).show();
         }
 
         else
@@ -211,6 +224,7 @@ public class RegisterActivity extends AppCompatActivity {
                         storeUserDefaultDataReference.child("user_name").setValue(name);
                         storeUserDefaultDataReference.child("user_name_lowercase").setValue(name.toLowerCase());
                         storeUserDefaultDataReference.child("user_public_key").setValue(public_key);
+                        storeUserDefaultDataReference.child("user_private_key").setValue(encrypted_priv_key);
                         storeUserDefaultDataReference.child("user_status").setValue("Hello World, I am using CChat");
                         storeUserDefaultDataReference.child("user_image").setValue("default_profile");
                         storeUserDefaultDataReference.child("device_token").setValue(device_token);
@@ -251,5 +265,43 @@ public class RegisterActivity extends AppCompatActivity {
             hexChars[j * 2 + 1] = hexArray[v & 0x0F];
         }
         return new String(hexChars);
+    }
+
+    // email sebagai kunci enkripsi
+    private String encrypt(String Data, String email) throws Exception
+    {
+        SecureRandom random = new SecureRandom();
+        byte[] salt = new byte[16];
+        random.nextBytes(salt);
+
+        SecretKeySpec key = generateKey(email, salt);
+        Cipher c = Cipher.getInstance(AES);
+        c.init(Cipher.ENCRYPT_MODE, key);
+        AlgorithmParameters params = c.getParameters();
+        byte[] iv = params.getParameterSpec(IvParameterSpec.class).getIV();
+        byte[] encryptedText = c.doFinal(Data.getBytes("UTF-8"));
+
+        // concatenate salt + iv + ciphertext
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        outputStream.write(salt);
+        outputStream.write(iv);
+        outputStream.write(encryptedText);
+
+
+        //  byte[] encVal = c.doFinal(Data.getBytes());
+        String encryptedValue = Base64.encodeToString(outputStream.toByteArray(), Base64.DEFAULT);
+
+        return encryptedValue;
+    }
+
+
+    private SecretKeySpec generateKey(String password, byte[] salt) throws Exception
+    {
+        KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, 65536, 128);
+        SecretKeyFactory f = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
+        byte[] key = f.generateSecret(spec).getEncoded();
+        SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
+
+        return secretKeySpec;
     }
 }

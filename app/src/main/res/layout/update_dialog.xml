@@ -18,14 +18,22 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Kunci" />
+        android:text="Password" />
 
     <EditText
         android:id="@+id/edit_kunci"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Kunci..."
+        android:hint="Password..."
         android:inputType="textPassword" />
+
+    <EditText
+        android:id="@+id/edit_kunci_private"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Kunci..."
+        android:inputType="textPassword"
+        android:visibility="gone" />
 
     <TextView
         android:id="@+id/textViewKunciPublikReceiver"
@@ -33,5 +41,19 @@
         android:layout_height="wrap_content"
         android:textAppearance="@style/TextAppearance.AppCompat.Medium"
         android:visibility="invisible" />
+
+    <Button
+        android:id="@+id/btn_dekrip_pesan"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="-30dp"
+        android:text="Dekripsi" />
+
+    <EditText
+        android:id="@+id/txtPesanTerdekripsi"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:enabled="false"
+        android:textColor="@android:color/holo_red_dark" />
 
 </LinearLayout>
