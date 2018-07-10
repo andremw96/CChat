@@ -105,29 +105,53 @@ public class RegisterActivity extends AppCompatActivity {
             @Override
             public void onClick(View view)
             {
+                // memunuclkan loadingbar
+                loadingBar.setTitle("Akun baru sedang dibuat");
+                loadingBar.setMessage("Silahkan Tunggu, ketika akun sedang dibuat");
+                loadingBar.show();
 
                 final String name = registerUserName.getText().toString();
                 email = registerUserEmail.getText().toString();
                 final String pwd = registerUserPassword.getText().toString();
 
-                try {
-                    generateUserKey();
-                } catch (Exception e) {
-                    e.printStackTrace();
+                if(TextUtils.isEmpty(name))
+                {
+                    Toast.makeText(RegisterActivity.this, "Masukkan nama anda.", Toast.LENGTH_LONG).show();
                 }
 
-                final String public_key = your_public_key_str;
-                final String encrypted_priv_key = encrypted_private_key;
-
-                Log.d("public key", public_key);
-                Log.d("encrypted priv key", encrypted_priv_key);
-
-
-                try {
-                    DaftarkanAkun(name, email, pwd, public_key, encrypted_priv_key);
-                } catch (Exception e) {
-                    e.printStackTrace();
+                if(TextUtils.isEmpty(email))
+                {
+                    Toast.makeText(RegisterActivity.this, "Masukkan email anda.", Toast.LENGTH_LONG).show();
                 }
+
+                if(TextUtils.isEmpty(pwd))
+                {
+                    Toast.makeText(RegisterActivity.this, "Masukkan password anda.", Toast.LENGTH_LONG).show();
+                }
+                else
+                {
+                    try {
+                        generateUserKey();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                    final String public_key = your_public_key_str;
+                    final String encrypted_priv_key = encrypted_private_key;
+
+                    Log.d("public key", public_key);
+                    Log.d("encrypted priv key", encrypted_priv_key);
+
+
+                    try {
+                        DaftarkanAkun(name, email, pwd, public_key, encrypted_priv_key);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                // dissmiss loading bar
+                loadingBar.dismiss();
 
             }
         });
@@ -203,10 +227,6 @@ public class RegisterActivity extends AppCompatActivity {
 
         else
         {
-            // memunuclkan loadingbar
-            loadingBar.setTitle("Akun baru sedang dibuat");
-            loadingBar.setMessage("Silahkan Tunggu, ketika akun sedang dibuat");
-            loadingBar.show();
 
             // script untuk memasukkan data  email dan password ke firebase
             mAuth.createUserWithEmailAndPassword(email, pwd).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
@@ -248,9 +268,6 @@ public class RegisterActivity extends AppCompatActivity {
                     {
                         Toast.makeText(RegisterActivity.this, "Ada kesalahan, silahkan coba lagi", Toast.LENGTH_SHORT).show();
                     }
-
-                    // dissmiss loading bar
-                    loadingBar.dismiss();
                 }
             });
         }
