@@ -97,14 +97,11 @@ public class LoginActivity extends AppCompatActivity {
                         String device_token = FirebaseInstanceId.getInstance().getToken();
 
                         usersReference.child(online_user_id).child("device_token").setValue(device_token)
-                                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                    @Override
-                                    public void onSuccess(Void aVoid) {
-                                        Intent mainIntent = new Intent(LoginActivity.this, MainActivity.class);
-                                        mainIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                                        startActivity(mainIntent);
-                                        finish();
-                                    }
+                                .addOnSuccessListener(aVoid -> {
+                                    Intent mainIntent = new Intent(LoginActivity.this, MainActivity.class);
+                                    mainIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                    startActivity(mainIntent);
+                                    finish();
                                 });
                     }
                     else
