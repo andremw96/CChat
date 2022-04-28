@@ -22,7 +22,7 @@ public class WelcomeActivity extends AppCompatActivity {
                     // memunculkan welcome screen selama 3 detik
                     sleep(3000);
                 }
-                catch (Exception e)
+                catch (InterruptedException e)
                 {
                     e.printStackTrace();
                 }
