@@ -6,16 +6,16 @@ jobs:
       - image: 'circleci/openjdk:11-jdk'
     steps:
       - checkout
-      - run:
-          name: Download Dependencies
-          command: ./gradlew :app:dependencies
-      - save_cache:
-          paths:
-            - ~/.gradle
-          key: jars-{{ checksum "build.gradle" }}-{{ checksum  "app/build.gradle" }}
+#      - run:
+#          name: Download Dependencies
+#          command: ./gradlew :app:dependencies
+#      - save_cache:
+#          paths:
+#            - ~/.gradle
+#          key: jars-{{ checksum "build.gradle" }}-{{ checksum  "app/build.gradle" }}
       - run:
           name: Analyze on SonarCloud
-          command: gradle build sonarqube
+          command: gradlew build sonarqube
 
 workflows:
   main:
