@@ -28,6 +28,7 @@ import com.google.firebase.iid.FirebaseInstanceId;
 
 import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.security.AlgorithmParameters;
 import java.security.SecureRandom;
 import java.security.spec.KeySpec;
@@ -71,7 +72,7 @@ public class RegisterActivity extends AppCompatActivity {
     String your_public_key_str;
     String encrypted_private_key;
 
-    private String AES = "AES/CBC/PKCS5Padding";
+    private final String AES = "AES/CBC/PKCS5Padding";
     String email;
 
     @Override
@@ -296,7 +297,7 @@ public class RegisterActivity extends AppCompatActivity {
         c.init(Cipher.ENCRYPT_MODE, key);
         AlgorithmParameters params = c.getParameters();
         byte[] iv = params.getParameterSpec(IvParameterSpec.class).getIV();
-        byte[] encryptedText = c.doFinal(Data.getBytes("UTF-8"));
+        byte[] encryptedText = c.doFinal(Data.getBytes(StandardCharsets.UTF_8));
 
         // concatenate salt + iv + ciphertext
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();

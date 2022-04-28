@@ -44,14 +44,14 @@ import de.hdodenhof.circleimageview.CircleImageView;
 
 public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.MessageViewHolder>
 {
-    private List<Messages> userMessagesList;
+    private final List<Messages> userMessagesList;
 
     private FirebaseAuth mAuth;
 
     private DatabaseReference usersReference;
 
-    private Context context;
-    private Activity parentActivity;
+    private final Context context;
+    private final Activity parentActivity;
 
     private String pesanTerenkripsi;
 
@@ -191,7 +191,7 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.Messag
     }
 
     public interface ClickListener{
-        public void itemClicked(View view, int position);
+        void itemClicked(View view, int position);
     }
 
 }

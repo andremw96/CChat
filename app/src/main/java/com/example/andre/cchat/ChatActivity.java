@@ -4,67 +4,46 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Color;
-import android.media.Image;
 import android.net.Uri;
-import android.provider.ContactsContract;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
-import android.util.TimingLogger;
-import android.view.GestureDetector;
-import android.view.Gravity;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.Gallery;
 import android.widget.ImageButton;
-import android.widget.ImageView;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.support.v7.widget.Toolbar;
 
-import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
-import com.google.firebase.auth.EmailAuthCredential;
-import com.google.firebase.auth.EmailAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.Query;
 import com.google.firebase.database.ServerValue;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.NetworkPolicy;
 import com.squareup.picasso.Picasso;
-import com.theartofdev.edmodo.cropper.CropImage;
-import com.theartofdev.edmodo.cropper.CropImageView;
 
 import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.security.AlgorithmParameters;
 import java.security.SecureRandom;
 import java.security.spec.KeySpec;
@@ -82,9 +61,8 @@ import javax.crypto.spec.SecretKeySpec;
 
 import de.frank_durr.ecdh_curve25519.ECDHCurve25519;
 import de.hdodenhof.circleimageview.CircleImageView;
-import okio.ByteString;
 
-public class ChatActivity extends AppCompatActivity implements MessagesAdapter.ClickListener{
+public class ChatActivity extends AppCompatActivity implements MessagesAdapter.ClickListener {
     public static final String TAG = ECDHCurve25519.class.getName();
 
     static {
@@ -128,14 +106,14 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
 
     private MessagesAdapter messageAdapter;
 
-    private static int Gallery_Pick = 1;
+    private static final int Gallery_Pick = 1;
     private StorageReference MessageImageStorageRef;
 
     private ProgressDialog loadingBar;
 
     private String outputString;
     private String pesanTerenkripsi;
-    private String AES = "AES/CBC/PKCS5Padding";
+    private final String AES = "AES/CBC/PKCS5Padding";
 
 
     @Override
@@ -152,7 +130,7 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
         messageSenderID = mAuth.getCurrentUser().getUid();
         messageSenderEmail = mAuth.getCurrentUser().getEmail();
 
-        if ( (getIntent().getExtras().get("visit_user_id").toString() != null) && (getIntent().getExtras().get("user_name").toString() != null) ) {
+        if ((getIntent().getExtras().get("visit_user_id").toString() != null) && (getIntent().getExtras().get("user_name").toString() != null)) {
             messageReceiverId = getIntent().getExtras().get("visit_user_id").toString();
             messageReceiverName = getIntent().getExtras().get("user_name").toString();
         }
@@ -210,31 +188,24 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
         rootRef.child("Users").child(messageReceiverId).addValueEventListener(new ValueEventListener() {
             @Override
             // retrieve user image & user last seen
-            public void onDataChange(DataSnapshot dataSnapshot)
-            {
+            public void onDataChange(DataSnapshot dataSnapshot) {
                 final String online = dataSnapshot.child("online").getValue().toString();
                 final String thumbImage = dataSnapshot.child("user_thumb_image").getValue().toString();
 
-                if(online.equals("true"))
-                {
+                if (online.equals("true")) {
                     userLastSeen.setText("Online");
-                }
-                else
-                {
+                } else {
                     LastSeenTime getTime = new LastSeenTime();
 
                     // convert data to long
                     long last_seen = Long.parseLong(online);
-                    System.out.printf("last_seen "+last_seen);
+                    System.out.printf("last_seen " + last_seen);
 
-                    if (last_seen != 0)
-                    {
-                        String lastSeenDisplayTime = getTime.getTimeAgo(last_seen, getApplicationContext()).toString();
-                        System.out.printf("lastSeenDisplayTime "+lastSeenDisplayTime);
+                    if (last_seen != 0) {
+                        String lastSeenDisplayTime = LastSeenTime.getTimeAgo(last_seen, getApplicationContext());
+                        System.out.printf("lastSeenDisplayTime " + lastSeenDisplayTime);
                         userLastSeen.setText(lastSeenDisplayTime);
-                    }
-                    else
-                    {
+                    } else {
                         userLastSeen.setText("Online");
                     }
                 }
@@ -300,19 +271,16 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
         });*/
 
 
-        sendMessageButton.setOnClickListener(new View.OnClickListener()
-        {
+        sendMessageButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view)
-            {
+            public void onClick(View view) {
                 kirimPesan();
             }
         });
 
         sendMessageButton.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
-            public boolean onLongClick(View view)
-            {
+            public boolean onLongClick(View view) {
                 showUpdateDialog();
 
                 return false;
@@ -323,8 +291,7 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
         // open gallery
         selectImageButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view)
-            {
+            public void onClick(View view) {
                 Intent galleryIntent = new Intent();
                 galleryIntent.setAction(Intent.ACTION_GET_CONTENT);
                 galleryIntent.setType("image/*");
@@ -340,13 +307,10 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
             public void onDataChange(DataSnapshot dataSnapshot) {
                 String kunci_public_B_hexa = dataSnapshot.child("user_public_key").getValue().toString(); // kunci publik bentuknya HEXA
 
-                if (kunci_public_B_hexa != null)
-                {
+                if (kunci_public_B_hexa != null) {
                     tempPublicKey.setText(kunci_public_B_hexa);
                     // String tempPublicKeyString = tempPublicKey.getText().toString();
-                }
-                else
-                {
+                } else {
                     Toast.makeText(ChatActivity.this, "User tersebut tidak punya kunci publik, tidak bisa enkripsi pesan", Toast.LENGTH_SHORT).show();
                 }
             }
@@ -367,14 +331,11 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
                 try {
                     String decryptedprivatekey = decryptPrivateKey(encryptedprivatekey, messageSenderEmail);
 
-                    if (encryptedprivatekey != null)
-                    {
+                    if (encryptedprivatekey != null) {
                         tempPrivateKey.setText(decryptedprivatekey);
                         Log.d("decrypted private key", decryptedprivatekey);
                         // String tempPublicKeyString = tempPublicKey.getText().toString();
-                    }
-                    else
-                    {
+                    } else {
                         Toast.makeText(ChatActivity.this, "User tersebut tidak punya kunci publik, tidak bisa enkripsi pesan", Toast.LENGTH_SHORT).show();
                     }
                 } catch (Exception e) {
@@ -524,7 +485,7 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
     }*/
 
 
-    private void showUpdateDialog(){ // dialog enkripsi
+    private void showUpdateDialog() { // dialog enkripsi
         String messageText = inputMessageText.getText().toString();
         String privateKey = tempPrivateKey.getText().toString();
 
@@ -548,8 +509,7 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
         editPrivateKey.setText(privateKey);
 
         alert.setPositiveButton("ok", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton)
-            {
+            public void onClick(DialogInterface dialog, int whichButton) {
                 final String messageText = editTextPesanEnkripsi.getText().toString();
                 final String inputPassword = editPwdUser.getText().toString(); //ini password user
                 final String privateKey = editPrivateKey.getText().toString();//ini kunci private
@@ -558,48 +518,42 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
                 Log.d("inputPassword", inputPassword);
                 Log.d("private key", privateKey);
 
-                if(TextUtils.isEmpty(messageText))
-                {
+                if (TextUtils.isEmpty(messageText)) {
                     Toast.makeText(ChatActivity.this, "Silahkan Isi Pesan Anda", Toast.LENGTH_SHORT).show();
                 }
-                if(TextUtils.isEmpty(inputPassword))
-                {
+                if (TextUtils.isEmpty(inputPassword)) {
                     Toast.makeText(ChatActivity.this, "Silahkan Isi Password Anda", Toast.LENGTH_SHORT).show();
-                }
-                else {
+                } else {
                     try {
                         mAuth.signInWithEmailAndPassword(messageSenderEmail, inputPassword).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
-                        @Override
-                        public void onComplete(@NonNull Task<AuthResult> task)
-                        {
-                            if(task.isSuccessful())
-                            {
-                                try {
-                                    //start
-                                    long lStartTime = System.nanoTime();
+                            @Override
+                            public void onComplete(@NonNull Task<AuthResult> task) {
+                                if (task.isSuccessful()) {
+                                    try {
+                                        //start
+                                        long lStartTime = System.nanoTime();
 
-                                    //task
-                                    outputString = (encrypt(messageText, privateKey)).trim();
+                                        //task
+                                        outputString = (encrypt(messageText, privateKey)).trim();
 
-                                    //end
-                                    long lEndTime = System.nanoTime();
+                                        //end
+                                        long lEndTime = System.nanoTime();
 
-                                    //time elapsed
-                                    long output = lEndTime - lStartTime;
+                                        //time elapsed
+                                        long output = lEndTime - lStartTime;
 
-                                    System.out.println("Waktu Enkripsi dalam milliseconds: " + output / 1000000);
+                                        System.out.println("Waktu Enkripsi dalam milliseconds: " + output / 1000000);
 
-                                    inputMessageText.setText(outputString);
-                                } catch (Exception e) {
-                                    e.printStackTrace();
+                                        inputMessageText.setText(outputString);
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                    }
+                                } else {
+                                    Toast.makeText(ChatActivity.this, "password tidak dikenali, silahkan Cek kembali password anda",
+                                            Toast.LENGTH_SHORT).show();
                                 }
                             }
-                            else
-                            {
-                                Toast.makeText(ChatActivity.this, "password tidak dikenali, silahkan Cek kembali password anda",
-                                        Toast.LENGTH_SHORT).show();
-                            }
-                        }});
+                        });
 
                         inputMessageText.setEnabled(false);
                     } catch (Exception e) {
@@ -616,7 +570,7 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
         });
 
         alert.show();
-    };
+    }
 
 
     // buat gambar
@@ -624,8 +578,7 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if(requestCode == Gallery_Pick && resultCode == RESULT_OK && data != null)
-        {
+        if (requestCode == Gallery_Pick && resultCode == RESULT_OK && data != null) {
             loadingBar.setTitle("Mengirim Gambar");
             loadingBar.setMessage("Mohon Tunggu, ketika gambar anda sedang dikirim ...");
             loadingBar.show();
@@ -641,10 +594,8 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
             StorageReference filePath = MessageImageStorageRef.child(message_push_id + ".jpg");
             filePath.putFile(ImageUri).addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
                 @Override
-                public void onComplete(@NonNull final Task<UploadTask.TaskSnapshot> task)
-                {
-                    if(task.isSuccessful())
-                    {
+                public void onComplete(@NonNull final Task<UploadTask.TaskSnapshot> task) {
+                    if (task.isSuccessful()) {
                         // get url of the image from firebase storage for image
                         final String downloadUrl = task.getResult().getDownloadUrl().toString();
 
@@ -670,9 +621,8 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
                         rootRef.updateChildren(messageBodyDetails, new DatabaseReference.CompletionListener() {
                             @Override
                             public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
-                                if(databaseError != null)
-                                {
-                                    Log.d("Chat_Log", databaseError.getMessage().toString());
+                                if (databaseError != null) {
+                                    Log.d("Chat_Log", databaseError.getMessage());
                                 }
 
                                 inputMessageText.setText("");
@@ -684,9 +634,7 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
                         Toast.makeText(ChatActivity.this, "Gambar telah terkirim", Toast.LENGTH_SHORT).show();
 
                         loadingBar.dismiss();
-                    }
-                    else
-                    {
+                    } else {
                         Toast.makeText(ChatActivity.this, "Gambar gagal terkirim, Coba Lagi", Toast.LENGTH_SHORT).show();
                         loadingBar.dismiss();
                     }
@@ -696,20 +644,17 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
     }
 
 
-
-    private void FetchMessages()
-    {
+    private void FetchMessages() {
         //DatabaseReference messageRef = rootRef.child("Messages").child(messageSenderID).child(messageReceiverId);
 
         // pertama akan load 10 pesan
         // terus jika di refresh oleh user maka mcurrent page berubah jadi 2 di oncreate, maka pesan jadi 20
-       // Query messageQuery = messageRef.limitToLast(mCurrentPage * TOTAL_ITEMS_TO_LOAD);
+        // Query messageQuery = messageRef.limitToLast(mCurrentPage * TOTAL_ITEMS_TO_LOAD);
 
         rootRef.child("Messages").child(messageSenderID).child(messageReceiverId)
                 .addChildEventListener(new ChildEventListener() {
                     @Override
-                    public void onChildAdded(DataSnapshot dataSnapshot, String s)
-                    {
+                    public void onChildAdded(DataSnapshot dataSnapshot, String s) {
                         Messages messages = dataSnapshot.getValue(Messages.class);
 
                         messageList.add(messages);
@@ -719,7 +664,7 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
                         userMessagesList.scrollToPosition(messageList.size() - 1);
 
 
-                       // mRefreshLayoutList.setRefreshing(false);
+                        // mRefreshLayoutList.setRefreshing(false);
                     }
 
                     @Override
@@ -744,16 +689,12 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
                 });
     }
 
-    private void kirimPesan()
-    {
+    private void kirimPesan() {
         String messageText = inputMessageText.getText().toString();
 
-        if(TextUtils.isEmpty(messageText))
-        {
+        if (TextUtils.isEmpty(messageText)) {
             Toast.makeText(ChatActivity.this, "Silahkan Isi Pesan Anda", Toast.LENGTH_SHORT).show();
-        }
-        else
-        {
+        } else {
             // membuat reference ke database ( tabel )
             String message_sender_ref = "Messages/" + messageSenderID + "/" + messageReceiverId;
             String message_receiver_ref = "Messages/" + messageReceiverId + "/" + messageSenderID;
@@ -792,12 +733,10 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
 
             rootRef.updateChildren(messageBodyDetails, new DatabaseReference.CompletionListener() {
                 @Override
-                public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference)
-                {
-                    if(databaseError != null)
-                    {
+                public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
+                    if (databaseError != null) {
 
-                        Log.d("Chat_Log", databaseError.getMessage().toString());
+                        Log.d("Chat_Log", databaseError.getMessage());
 
                     }
 
@@ -806,8 +745,7 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
         }
     }
 
-    private String encrypt(String Data, String password) throws Exception
-    {
+    private String encrypt(String Data, String password) throws Exception {
         SecureRandom random = new SecureRandom();
         byte[] salt = new byte[16];
         random.nextBytes(salt);
@@ -817,7 +755,7 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
         c.init(Cipher.ENCRYPT_MODE, key);
         AlgorithmParameters params = c.getParameters();
         byte[] iv = params.getParameterSpec(IvParameterSpec.class).getIV();
-        byte[] encryptedText = c.doFinal(Data.getBytes("UTF-8"));
+        byte[] encryptedText = c.doFinal(Data.getBytes(StandardCharsets.UTF_8));
 
         // concatenate salt + iv + ciphertext
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -829,14 +767,13 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
         //  byte[] encVal = c.doFinal(Data.getBytes());
         String encryptedValue = Base64.encodeToString(outputStream.toByteArray(), Base64.DEFAULT);
 
-        String x = new String(outputStream.toByteArray(), "US-ASCII");
+        String x = outputStream.toString(String.valueOf(StandardCharsets.US_ASCII));
         Log.d("pesan terenkripsi", x);
 
         return encryptedValue;
     }
 
-    public String decrypt(String outputString, String password) throws Exception
-    {
+    public String decrypt(String outputString, String password) throws Exception {
         byte[] decodeValue = Base64.decode(outputString, Base64.DEFAULT);
 
         byte[] salt = Arrays.copyOfRange(decodeValue, 0, 16);
@@ -850,10 +787,10 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
         byte[] plaintext = c.doFinal(ct);
         // c.init(Cipher.DECRYPT_MODE, key);
 
-        String x = new String(plaintext, "US-ASCII");
+        String x = new String(plaintext, StandardCharsets.US_ASCII);
         Log.d("pesan terdekripsi", x);
 
-        return new String(plaintext, "UTF-8");
+        return new String(plaintext, StandardCharsets.UTF_8);
 
         // byte[] decValue = c.doFinal(decodeValue);
         //  String decryptedValue = new String(decValue);
@@ -861,34 +798,33 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
         // return null;
     }
 
-    private SecretKeySpec generateKey(String password, byte[] salt) throws Exception
-    {
+    private SecretKeySpec generateKey(String password, byte[] salt) throws Exception {
         //String private_key_a_hex = "D09280F20000000000B478AA7D76370F000059000000430034E39EBF7D76374F";
-       // String public_key_a_hex = "0D3028981B0CC6968F7DA1B316170B77E4AD362AFD31967C27BE74D8B45DBE7F";
-      //  String private_key_b_hex = "18990FF50600000000B478AA00D59EBF000059000000430034E39EBF7D76374F";
+        // String public_key_a_hex = "0D3028981B0CC6968F7DA1B316170B77E4AD362AFD31967C27BE74D8B45DBE7F";
+        //  String private_key_b_hex = "18990FF50600000000B478AA00D59EBF000059000000430034E39EBF7D76374F";
 
 
         //byte[] kunci_private_a = hexStringToByteArray(private_key_a_hex);
         //byte[] kunci_public_a = hexStringToByteArray(public_key_a_hex);
 
-       // byte[] kunci_private_b = hexStringToByteArray(private_key_b_hex);
+        // byte[] kunci_private_b = hexStringToByteArray(private_key_b_hex);
 
 
-       // System.out.println(Arrays.toString(kunci_private_a));
-       // System.out.println(Arrays.toString(kunci_public_a));
+        // System.out.println(Arrays.toString(kunci_private_a));
+        // System.out.println(Arrays.toString(kunci_public_a));
 
-       // System.out.println(Arrays.toString(kunci_private_b));
-      //  System.out.println(Arrays.toString(kunci_public_B));
+        // System.out.println(Arrays.toString(kunci_private_b));
+        //  System.out.println(Arrays.toString(kunci_public_B));
 
-       // byte[] shared_secret_A = ECDHCurve25519.generate_shared_secret(kunci_private_a, kunci_public_B);
+        // byte[] shared_secret_A = ECDHCurve25519.generate_shared_secret(kunci_private_a, kunci_public_B);
         //byte[] shared_secret_B = ECDHCurve25519.generate_shared_secret(kunci_private_b, kunci_public_a);
 
         // sharedsecreta != sharedsecretB
 
-      //  String shared_secret_A_str = bytesToHex(shared_secret_A);
-       // String shared_secret_B_str = bytesToHex(shared_secret_B);
-       // Log.d("shared_secret_A_str", shared_secret_A_str);
-       // Log.d("shared_secret_B_str", shared_secret_B_str);
+        //  String shared_secret_A_str = bytesToHex(shared_secret_A);
+        // String shared_secret_B_str = bytesToHex(shared_secret_B);
+        // Log.d("shared_secret_A_str", shared_secret_A_str);
+        // Log.d("shared_secret_B_str", shared_secret_B_str);
 
         String public_key_user2 = tempPublicKey.getText().toString();
         Log.d("public_key_user2", public_key_user2);
@@ -913,8 +849,7 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
 
     }
 
-    public String decryptPrivateKey(String outputString, String password) throws Exception
-    {
+    public String decryptPrivateKey(String outputString, String password) throws Exception {
         byte[] decodeValue = Base64.decode(outputString, Base64.DEFAULT);
 
         byte[] salt = Arrays.copyOfRange(decodeValue, 0, 16);
@@ -928,10 +863,10 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
         byte[] plaintext = c.doFinal(ct);
         // c.init(Cipher.DECRYPT_MODE, key);
 
-        String x = new String(plaintext, "US-ASCII");
+        String x = new String(plaintext, StandardCharsets.US_ASCII);
         Log.d("pesan terdekripsi", x);
 
-        return new String(plaintext, "UTF-8");
+        return new String(plaintext, StandardCharsets.UTF_8);
 
         // byte[] decValue = c.doFinal(decodeValue);
         //  String decryptedValue = new String(decValue);
@@ -939,8 +874,7 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
         // return null;
     }
 
-    private SecretKeySpec generateKeyForPrivate(String password, byte[] salt) throws Exception
-    {
+    private SecretKeySpec generateKeyForPrivate(String password, byte[] salt) throws Exception {
         KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, 65536, 128);
         SecretKeyFactory f = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
         byte[] key = f.generateSecret(spec).getEncoded();
@@ -950,9 +884,10 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
     }
 
     private final static char[] hexArray = "0123456789ABCDEF".toCharArray();
+
     public static String bytesToHex(byte[] bytes) {
         char[] hexChars = new char[bytes.length * 2];
-        for ( int j = 0; j < bytes.length; j++ ) {
+        for (int j = 0; j < bytes.length; j++) {
             int v = bytes[j] & 0xFF;
             hexChars[j * 2] = hexArray[v >>> 4];
             hexChars[j * 2 + 1] = hexArray[v & 0x0F];
@@ -965,7 +900,7 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
         byte[] data = new byte[len / 2];
         for (int i = 0; i < len; i += 2) {
             data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
-                    + Character.digit(s.charAt(i+1), 16));
+                    + Character.digit(s.charAt(i + 1), 16));
         }
         return data;
     }
@@ -974,7 +909,7 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
     public void itemClicked(View view, int position) {
 
         String TAG = "messagePosition";
-        Log.d(TAG, "You clicked on "+position);
+        Log.d(TAG, "You clicked on " + position);
 
         Messages messages = messageList.get(position);
         pesanTerenkripsi = messages.getMessage();
@@ -1010,51 +945,43 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
             Log.d("inputPassword", inputPassword);
             Log.d("privateKey", privateKey1);
 
-            if(TextUtils.isEmpty(messageText))
-            {
+            if (TextUtils.isEmpty(messageText)) {
                 Toast.makeText(ChatActivity.this, "Silahkan Isi Pesan Anda", Toast.LENGTH_SHORT).show();
             }
-            if(TextUtils.isEmpty(inputPassword))
-            {
+            if (TextUtils.isEmpty(inputPassword)) {
                 Toast.makeText(ChatActivity.this, "Silahkan Isi Password Anda", Toast.LENGTH_SHORT).show();
-            }
-            else {
+            } else {
                 try {
                     mAuth.signInWithEmailAndPassword(messageSenderEmail, inputPassword).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task)
-                    {
-                        if(task.isSuccessful())
-                        {
-                            try
-                            {
-                                //start
-                                long lStartTime = System.nanoTime();
+                        @Override
+                        public void onComplete(@NonNull Task<AuthResult> task) {
+                            if (task.isSuccessful()) {
+                                try {
+                                    //start
+                                    long lStartTime = System.nanoTime();
 
-                                //task
-                                outputString = decrypt(messageText, privateKey1);
-                                txtPesanTerdekripsi.setText(outputString);
+                                    //task
+                                    outputString = decrypt(messageText, privateKey1);
+                                    txtPesanTerdekripsi.setText(outputString);
 
-                                //end
-                                long lEndTime = System.nanoTime();
+                                    //end
+                                    long lEndTime = System.nanoTime();
 
-                                //time elapsed
-                                long output = lEndTime - lStartTime;
+                                    //time elapsed
+                                    long output = lEndTime - lStartTime;
 
-                                System.out.println("Waktu Dekripsi dalam milliseconds: " + output / 1000000);
-                            } catch (Exception e) {
-                                e.printStackTrace();
+                                    System.out.println("Waktu Dekripsi dalam milliseconds: " + output / 1000000);
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            } else {
+                                Toast.makeText(ChatActivity.this, "password tidak dikenali, silahkan Cek kembali password anda",
+                                        Toast.LENGTH_SHORT).show();
                             }
-                        }
-                        else
-                        {
-                            Toast.makeText(ChatActivity.this, "password tidak dikenali, silahkan Cek kembali password anda",
-                                    Toast.LENGTH_SHORT).show();
-                        }
 
-                        loadingBar.dismiss();
-                    }
-            });
+                            loadingBar.dismiss();
+                        }
+                    });
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

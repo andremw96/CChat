@@ -25,11 +25,11 @@ public class FirebaseMessagingService extends com.google.firebase.messaging.Fire
       //  String notification_body = remoteMessage.getNotification().getBody();
 
         // String click_action = remoteMessage.getNotification().getClickAction();
-        String from_sender_id = remoteMessage.getData().get("from_user_id").toString();
-        String from_user_name = remoteMessage.getData().get("from_user_name").toString();
-        String click_action = remoteMessage.getData().get("click_action").toString();
-        String notification_title = remoteMessage.getData().get("title").toString();
-        String notification_body = remoteMessage.getData().get("body").toString();
+        String from_sender_id = remoteMessage.getData().get("from_user_id");
+        String from_user_name = remoteMessage.getData().get("from_user_name");
+        String click_action = remoteMessage.getData().get("click_action");
+        String notification_title = remoteMessage.getData().get("title");
+        String notification_body = remoteMessage.getData().get("body");
 
 
         NotificationCompat.Builder mBuilder =

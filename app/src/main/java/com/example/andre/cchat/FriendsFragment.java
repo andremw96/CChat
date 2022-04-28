@@ -130,7 +130,7 @@ public class FriendsFragment extends Fragment
                             {
                                 // jika user ngeklik 1 user di friend fragment, maka akan muncul dialog box dgn 2 option
                                 // pertama setting optionsnya dulu
-                                CharSequence options[] = new CharSequence[]
+                                CharSequence[] options = new CharSequence[]
                                         {
                                                 "Lihat Profil " + userName,
                                                 "Mulai Percakapan"
