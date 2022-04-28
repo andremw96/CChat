@@ -13,7 +13,9 @@
         android:roundIcon="@mipmap/icon"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <service android:name=".FirebaseMessagingService">
+        <service
+            android:name=".FirebaseMessagingService"
+            android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
@@ -48,9 +50,11 @@
             android:name=".StatusActivity"
             android:parentActivityName=".SettingsActivity" />
 
-        <activity android:name=".ProfileActivity">
+        <activity
+            android:name=".ProfileActivity"
+            android:exported="false">
             <intent-filter>
-                <action android:name="com.example.andre.cchat_TARGET_NOTIFICATION" ></action>
+                <action android:name="com.example.andre.cchat_TARGET_NOTIFICATION"></action>
                 <category android:name="android.intent.category.DEFAULT"></category>
             </intent-filter>
         </activity>
@@ -59,9 +63,11 @@
             android:name=".AllUsersActivity"
             android:parentActivityName=".MainActivity" />
 
-        <activity android:name=".ChatActivity"
-                  android:parentActivityName=".MainActivity"
-                  android:windowSoftInputMode="adjustPan" >
+        <activity
+            android:name=".ChatActivity"
+            android:exported="false"
+            android:parentActivityName=".MainActivity"
+            android:windowSoftInputMode="adjustPan">
             <intent-filter>
                 <action android:name="com.example.andre.cchat_TARGET_NOTIFICATION_MESSAGE" />
                 <category android:name="android.intent.category.DEFAULT" />
