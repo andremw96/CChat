@@ -3,16 +3,16 @@ version: 2.1
 jobs:
   build:
     docker:
-      - image: 'circleci/openjdk:11-jdk'
+      - image: circleci/android:api-29-node
     steps:
       - checkout
-#      - run:
-#          name: Download Dependencies
-#          command: ./gradlew :app:dependencies
-#      - save_cache:
-#          paths:
-#            - ~/.gradle
-#          key: jars-{{ checksum "build.gradle" }}-{{ checksum  "app/build.gradle" }}
+      - run:
+          name: Download Dependencies
+          command: ./gradlew :app:dependencies
+      - save_cache:
+          paths:
+            - ~/.gradle
+          key: jars-{{ checksum "build.gradle" }}-{{ checksum  "app/build.gradle" }}
       - run:
           name: Analyze on SonarCloud
           command: ./gradlew sonarqube -Dsonar.host.url=https://sonarcloud.io
