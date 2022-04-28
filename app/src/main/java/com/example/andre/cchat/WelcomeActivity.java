@@ -17,19 +17,13 @@ public class WelcomeActivity extends AppCompatActivity {
             @Override
             public void run()
             {
-                try
-                {
                     // memunculkan welcome screen selama 3 detik
+                try {
                     sleep(3000);
-                }
-                catch (InterruptedException e)
-                {
+                } catch (InterruptedException e) {
                     e.printStackTrace();
-                }
-
-                // screen mana setelah splash screen
-                finally
-                {
+                    Thread.currentThread().interrupt();
+                } finally {
                     Intent mainIntent = new Intent(WelcomeActivity.this, MainActivity.class);
                     startActivity(mainIntent);
                 }
