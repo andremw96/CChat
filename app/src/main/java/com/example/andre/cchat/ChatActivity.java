@@ -1001,65 +1001,62 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
         editTextPesanDekripsi.setEnabled(false);
         editKunciDekripsi.setText(privateKey);
 
-        btnDekripsi.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                final String messageText = editTextPesanDekripsi.getText().toString();
-                final String inputPassword = editPwdUser.getText().toString();
-                final String privateKey = editKunciDekripsi.getText().toString();
+        btnDekripsi.setOnClickListener(view1 -> {
+            final String messageText = editTextPesanDekripsi.getText().toString();
+            final String inputPassword = editPwdUser.getText().toString();
+            final String privateKey1 = editKunciDekripsi.getText().toString();
 
-                Log.d("messageText", messageText);
-                Log.d("inputPassword", inputPassword);
-                Log.d("privateKey", privateKey);
+            Log.d("messageText", messageText);
+            Log.d("inputPassword", inputPassword);
+            Log.d("privateKey", privateKey1);
 
-                if(TextUtils.isEmpty(messageText))
-                {
-                    Toast.makeText(ChatActivity.this, "Silahkan Isi Pesan Anda", Toast.LENGTH_SHORT).show();
-                }
-                if(TextUtils.isEmpty(inputPassword))
-                {
-                    Toast.makeText(ChatActivity.this, "Silahkan Isi Password Anda", Toast.LENGTH_SHORT).show();
-                }
-                else {
-                    try {
-                        mAuth.signInWithEmailAndPassword(messageSenderEmail, inputPassword).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
-                        @Override
-                        public void onComplete(@NonNull Task<AuthResult> task)
+            if(TextUtils.isEmpty(messageText))
+            {
+                Toast.makeText(ChatActivity.this, "Silahkan Isi Pesan Anda", Toast.LENGTH_SHORT).show();
+            }
+            if(TextUtils.isEmpty(inputPassword))
+            {
+                Toast.makeText(ChatActivity.this, "Silahkan Isi Password Anda", Toast.LENGTH_SHORT).show();
+            }
+            else {
+                try {
+                    mAuth.signInWithEmailAndPassword(messageSenderEmail, inputPassword).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task)
+                    {
+                        if(task.isSuccessful())
                         {
-                            if(task.isSuccessful())
+                            try
                             {
-                                try
-                                {
-                                    //start
-                                    long lStartTime = System.nanoTime();
+                                //start
+                                long lStartTime = System.nanoTime();
 
-                                    //task
-                                    outputString = decrypt(messageText, privateKey);
-                                    txtPesanTerdekripsi.setText(outputString);
+                                //task
+                                outputString = decrypt(messageText, privateKey1);
+                                txtPesanTerdekripsi.setText(outputString);
 
-                                    //end
-                                    long lEndTime = System.nanoTime();
+                                //end
+                                long lEndTime = System.nanoTime();
 
-                                    //time elapsed
-                                    long output = lEndTime - lStartTime;
+                                //time elapsed
+                                long output = lEndTime - lStartTime;
 
-                                    System.out.println("Waktu Dekripsi dalam milliseconds: " + output / 1000000);
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                }
+                                System.out.println("Waktu Dekripsi dalam milliseconds: " + output / 1000000);
+                            } catch (Exception e) {
+                                e.printStackTrace();
                             }
-                            else
-                            {
-                                Toast.makeText(ChatActivity.this, "password tidak dikenali, silahkan Cek kembali password anda",
-                                        Toast.LENGTH_SHORT).show();
-                            }
-
-                            loadingBar.dismiss();
                         }
-                });
-                    } catch (Exception e) {
-                        e.printStackTrace();
+                        else
+                        {
+                            Toast.makeText(ChatActivity.this, "password tidak dikenali, silahkan Cek kembali password anda",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+
+                        loadingBar.dismiss();
                     }
+            });
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
             }
         });
