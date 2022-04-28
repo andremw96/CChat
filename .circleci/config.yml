@@ -15,7 +15,7 @@ jobs:
 #          key: jars-{{ checksum "build.gradle" }}-{{ checksum  "app/build.gradle" }}
       - run:
           name: Analyze on SonarCloud
-          command: gradlew build sonarqube
+          command: gradle build sonarqube
 
 workflows:
   main:
