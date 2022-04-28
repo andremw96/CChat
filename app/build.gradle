@@ -1,5 +1,6 @@
 apply plugin: 'com.android.application'
 apply plugin: 'com.google.gms.google-services'
+apply plugin: "org.sonarqube"
 
 android {
     compileSdkVersion 30
@@ -17,6 +18,14 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+    }
+}
+
+sonarqube {
+    properties {
+        property "sonar.projectKey", "andremw96_CChat"
+        property "sonar.organization", "andremw96"
+        property "sonar.host.url", "https://sonarcloud.io"
     }
 }
 
@@ -59,17 +68,3 @@ configurations.all {
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-apply plugin: 'com.google.gms.google-services'
