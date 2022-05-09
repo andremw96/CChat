@@ -1,4 +1,4 @@
-package com.example.andre.cchat;
+package com.example.andre.cchat.model;
 
 import android.app.Application;
 import android.content.Context;

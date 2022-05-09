@@ -1,4 +1,4 @@
-package com.example.andre.cchat;
+package com.example.andre.cchat.model;
 
 /**
  * Created by Wijaya_PC on 23-Jan-18.

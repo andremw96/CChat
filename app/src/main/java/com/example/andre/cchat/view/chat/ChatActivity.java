@@ -1,4 +1,4 @@
-package com.example.andre.cchat;
+package com.example.andre.cchat.view.chat;
 
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -24,6 +24,10 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.andre.cchat.R;
+import com.example.andre.cchat.model.LastSeenTime;
+import com.example.andre.cchat.model.Messages;
+import com.example.andre.cchat.view.chat.adapter.MessagesAdapter;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;

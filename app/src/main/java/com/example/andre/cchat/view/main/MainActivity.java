@@ -1,17 +1,18 @@
-package com.example.andre.cchat;
+package com.example.andre.cchat.view.main;
 
 import android.content.Intent;
-import android.provider.ContactsContract;
+import android.os.Bundle;
 import android.support.design.widget.TabLayout;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
-// import android.widget.Toolbar;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 
+import com.example.andre.cchat.R;
+import com.example.andre.cchat.view.allusers.AllUsersActivity;
+import com.example.andre.cchat.view.setting.SettingsActivity;
+import com.example.andre.cchat.view.startpage.StartPageActivity;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
@@ -20,18 +21,11 @@ import com.google.firebase.database.ServerValue;
 
 public class MainActivity extends AppCompatActivity {
 
-    private Toolbar mToolbar;
-
     private FirebaseAuth mAuth;
-
-    private ViewPager myViewPager;
-    private TabLayout myTabLayout;
-    private TabsPagerAdapter myTabsPagerAdapter;
 
     FirebaseUser currentUser;
 
-    private DatabaseReference UsersReference;
-
+    private DatabaseReference usersReference;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,22 +38,21 @@ public class MainActivity extends AppCompatActivity {
         currentUser = mAuth.getCurrentUser();
 
         // user login properly / user login ke aplikasi
-        if(currentUser != null)
-        {
-            String online_user_id = mAuth.getCurrentUser().getUid();
+        if (currentUser != null) {
+            String onlineUserId = mAuth.getCurrentUser().getUid();
 
-            UsersReference = FirebaseDatabase.getInstance().getReference().child("Users").child(online_user_id);
+            usersReference = FirebaseDatabase.getInstance().getReference().child("Users").child(onlineUserId);
         }
 
         // tab2 untuk mainactivity
-        myViewPager = (ViewPager) findViewById(R.id.main_tabs_pager);
-        myTabsPagerAdapter = new TabsPagerAdapter(getSupportFragmentManager());
+        ViewPager myViewPager = (ViewPager) findViewById(R.id.main_tabs_pager);
+        TabsPagerAdapter myTabsPagerAdapter = new TabsPagerAdapter(getSupportFragmentManager());
         myViewPager.setAdapter(myTabsPagerAdapter);
-        myTabLayout = (TabLayout) findViewById(R.id.main_tabs);
+        TabLayout myTabLayout = (TabLayout) findViewById(R.id.main_tabs);
         myTabLayout.setupWithViewPager(myViewPager);
 
 
-        mToolbar = (Toolbar) findViewById(R.id.main_page_toolbar);
+        Toolbar mToolbar = (Toolbar) findViewById(R.id.main_page_toolbar);
         setSupportActionBar(mToolbar);
         getSupportActionBar().setTitle("CChat");
     }
@@ -72,31 +65,25 @@ public class MainActivity extends AppCompatActivity {
         currentUser = mAuth.getCurrentUser();
 
         // jika user blm login
-        if ( currentUser == null )
-        {
-            LogoutUser();
-        }
-        else if ( currentUser != null )
-        {
-            UsersReference.child("online").setValue("true");
+        if (currentUser == null) {
+            logoutUser();
+        } else {
+            usersReference.child("online").setValue("true");
         }
     }
 
     @Override
     // onstop basically user minimize his app
-    protected void onStop()
-    {
+    protected void onStop() {
         super.onStop();
 
         // jika login sedang online, lalu dia minimize app, maka node online diubah ke jam terakhir online
-        if ( currentUser != null )
-        {
-            UsersReference.child("online").setValue(ServerValue.TIMESTAMP);
+        if (currentUser != null) {
+            usersReference.child("online").setValue(ServerValue.TIMESTAMP);
         }
     }
 
-    private void LogoutUser()
-    {
+    private void logoutUser() {
         Intent startPageIntent = new Intent(MainActivity.this, StartPageActivity.class);
         // ketika user pencet back button, maka dia tidak bisa ke main activity lagi
         startPageIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -105,8 +92,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu)
-    {
+    public boolean onCreateOptionsMenu(Menu menu) {
         // memanggil menu
         super.onCreateOptionsMenu(menu);
 
@@ -116,41 +102,33 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item)
-    {
+    public boolean onOptionsItemSelected(MenuItem item) {
         super.onOptionsItemSelected(item);
 
-        if(item.getItemId() == R.id.main_logout_button)
-        {
+        if (item.getItemId() == R.id.main_logout_button) {
             // ketika user klik logout, maka dia offline
             // maka nilai node online di firebase user diubah ke waktu terakhir dia online
-            if(currentUser != null)
-            {
-                UsersReference.child("online").setValue(ServerValue.TIMESTAMP);
+            if (currentUser != null) {
+                usersReference.child("online").setValue(ServerValue.TIMESTAMP);
             }
 
             mAuth.signOut(); // logout dari firebase database
 
-            LogoutUser(); // kembali ke main page
+            logoutUser(); // kembali ke main page
         }
 
-        if(item.getItemId() == R.id.main_pengaturan_akun_button)
-        {
+        if (item.getItemId() == R.id.main_pengaturan_akun_button) {
             Intent settingsIntent = new Intent(MainActivity.this, SettingsActivity.class);
             startActivity(settingsIntent);
         }
 
-        if(item.getItemId() == R.id.main_all_users_button)
-        {
+        if (item.getItemId() == R.id.main_all_users_button) {
             Intent allUsersIntent = new Intent(MainActivity.this, AllUsersActivity.class);
             startActivity(allUsersIntent);
         }
 
-
         return true;
     }
-
-
 }
 
 

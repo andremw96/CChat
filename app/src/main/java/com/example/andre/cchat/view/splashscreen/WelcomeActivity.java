@@ -1,8 +1,11 @@
-package com.example.andre.cchat;
+package com.example.andre.cchat.view.splashscreen;
 
 import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+
+import com.example.andre.cchat.R;
+import com.example.andre.cchat.view.main.MainActivity;
 
 public class WelcomeActivity extends AppCompatActivity {
 
@@ -12,12 +15,10 @@ public class WelcomeActivity extends AppCompatActivity {
         setContentView(R.layout.activity_welcome);
 
         // bkin splash screen
-        Thread thread = new Thread()
-        {
+        Thread thread = new Thread() {
             @Override
-            public void run()
-            {
-                    // memunculkan welcome screen selama 3 detik
+            public void run() {
+                // memunculkan welcome screen selama 3 detik
                 try {
                     sleep(3000);
                 } catch (InterruptedException e) {

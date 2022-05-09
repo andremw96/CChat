@@ -1,23 +1,19 @@
-package com.example.andre.cchat;
+package com.example.andre.cchat.view.chat.adapter;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.graphics.Color;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.RecyclerView;
-import android.text.TextUtils;
-import android.util.Base64;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
+import com.example.andre.cchat.R;
+import com.example.andre.cchat.model.Messages;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -26,15 +22,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.squareup.picasso.Picasso;
 
-import java.security.spec.KeySpec;
-import java.util.Arrays;
 import java.util.List;
-
-import javax.crypto.Cipher;
-import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.PBEKeySpec;
-import javax.crypto.spec.SecretKeySpec;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 

@@ -1,4 +1,4 @@
-package com.example.andre.cchat;
+package com.example.andre.cchat.view.main.friends;
 
 
 import android.app.AlertDialog;
@@ -6,9 +6,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
-import android.provider.ContactsContract;
 import android.support.v4.app.Fragment;
-import android.support.v7.widget.AlertDialogLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -17,6 +15,10 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.example.andre.cchat.R;
+import com.example.andre.cchat.model.Friends;
+import com.example.andre.cchat.view.profile.ProfileActivity;
+import com.example.andre.cchat.view.chat.ChatActivity;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
@@ -36,85 +38,70 @@ import de.hdodenhof.circleimageview.CircleImageView;
 /**
  * A simple {@link Fragment} subclass.
  */
-public class FriendsFragment extends Fragment
-{
+public class FriendsFragment extends Fragment {
     private RecyclerView mFriendsList;
 
-    private DatabaseReference FriendsReference;
-    private DatabaseReference UsersReference;
-    private FirebaseAuth mAuth;
+    private DatabaseReference friendsReference;
+    private DatabaseReference usersReference;
 
-    String online_user_id;
-
-    private View mMainView;
+    String onlineUserId;
 
     public FriendsFragment() {
         // Required empty public constructor
     }
 
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState)
-    {
+                             Bundle savedInstanceState) {
         // display semua friends ke recycler view, kita harus link mMainView ke recyclerview
-        mMainView = inflater.inflate(R.layout.fragment_friends, container, false);
+        View mMainView = inflater.inflate(R.layout.fragment_friends, container, false);
 
         // linking mMainView ke recyclerView
         mFriendsList = (RecyclerView) mMainView.findViewById(R.id.friends_list);
 
         // casting mAuth sehingga bisa memakai getUid
-        mAuth = FirebaseAuth.getInstance();
-        online_user_id = mAuth.getCurrentUser().getUid();
+        FirebaseAuth mAuth = FirebaseAuth.getInstance();
+        onlineUserId = mAuth.getCurrentUser().getUid();
 
-        FriendsReference = FirebaseDatabase.getInstance().getReference().child("Friends").child(online_user_id);
-        FriendsReference.keepSynced(true);
+        friendsReference = FirebaseDatabase.getInstance().getReference().child("Friends").child(onlineUserId);
+        friendsReference.keepSynced(true);
 
-        UsersReference = FirebaseDatabase.getInstance().getReference().child("Users");
-        UsersReference.keepSynced(true);
+        usersReference = FirebaseDatabase.getInstance().getReference().child("Users");
+        usersReference.keepSynced(true);
 
         // kita harus set layout manager untuk recycler view
         mFriendsList.setLayoutManager(new LinearLayoutManager(getContext()));
 
         // retrieve all user to the friends fragment
-
         // Inflate the layout for this fragment
         return mMainView;
     }
 
     @Override
-    public void onStart()
-    {
+    public void onStart() {
         super.onStart();
 
-        // declare firebase recycler adapter for retrieve all user from database
-
-        //< model, static class >
         FirebaseRecyclerAdapter<Friends, FriendsViewHolder> firebaseRecyclerAdapter
                 = new FirebaseRecyclerAdapter<Friends, FriendsViewHolder>
                 (
                         Friends.class,
                         R.layout.all_users_display_layout,
                         FriendsViewHolder.class,
-                        FriendsReference
-                )
-        {
+                        friendsReference
+                ) {
             @Override
-            protected void populateViewHolder(final FriendsViewHolder viewHolder, final Friends model, int position)
-            {
+            protected void populateViewHolder(final FriendsViewHolder viewHolder, final Friends model, int position) {
                 viewHolder.setDate(model.getDate());
 
                 final String list_user_id = getRef(position).getKey();
 
-                UsersReference.child(list_user_id).addValueEventListener(new ValueEventListener() {
+                usersReference.child(list_user_id).addValueEventListener(new ValueEventListener() {
                     @Override
-                    public void onDataChange(final DataSnapshot dataSnapshot)
-                    {
+                    public void onDataChange(final DataSnapshot dataSnapshot) {
                         final String userName = dataSnapshot.child("user_name").getValue().toString();
                         String userThumbImage = dataSnapshot.child("user_thumb_image").getValue().toString();
 
-                        if(dataSnapshot.hasChild("online"))
-                        {
+                        if (dataSnapshot.hasChild("online")) {
                             String online_status = (String) dataSnapshot.child("online").getValue().toString();
 
                             viewHolder.setUserOnline(online_status);
@@ -123,11 +110,9 @@ public class FriendsFragment extends Fragment
                         viewHolder.setUserName(userName);
                         viewHolder.setUserThumbImage(getContext(), userThumbImage);
 
-                        viewHolder.mView.setOnClickListener(new View.OnClickListener()
-                        {
+                        viewHolder.mView.setOnClickListener(new View.OnClickListener() {
                             @Override
-                            public void onClick(View view)
-                            {
+                            public void onClick(View view) {
                                 // jika user ngeklik 1 user di friend fragment, maka akan muncul dialog box dgn 2 option
                                 // pertama setting optionsnya dulu
                                 CharSequence[] options = new CharSequence[]
@@ -140,39 +125,31 @@ public class FriendsFragment extends Fragment
                                 AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
                                 builder.setTitle("Select Options");
 
-                                builder.setItems(options, new DialogInterface.OnClickListener()
-                                {
+                                builder.setItems(options, new DialogInterface.OnClickListener() {
                                     @Override
-                                    public void onClick(DialogInterface dialogInterface, int position)
-                                    {
+                                    public void onClick(DialogInterface dialogInterface, int position) {
                                         // position 0 itu berarti user profile sesuai optionsp[ diatas
-                                        if(position == 0)
-                                        {
+                                        if (position == 0) {
                                             Intent profileIntent = new Intent(getContext(), ProfileActivity.class);
                                             profileIntent.putExtra("visit_user_id", list_user_id);
                                             profileIntent.putExtra("user_name", userName);
                                             startActivity(profileIntent);
                                         }
 
-                                        if(position == 1)
-                                        {
+                                        if (position == 1) {
                                             // biar gk eror, dibuat validasi
                                             // misal ada user tidak online 6 bulan, dan ketika dia buka app mychat bisa eror
                                             // maka dikasi validasi
-                                            if(dataSnapshot.child("online").exists())
-                                            {
+                                            if (dataSnapshot.child("online").exists()) {
                                                 Intent chatIntent = new Intent(getContext(), ChatActivity.class);
                                                 chatIntent.putExtra("visit_user_id", list_user_id);
                                                 chatIntent.putExtra("user_name", userName);
                                                 startActivity(chatIntent);
-                                            }
-                                            else
-                                            {
-                                                UsersReference.child(list_user_id).child("online").
+                                            } else {
+                                                usersReference.child(list_user_id).child("online").
                                                         setValue(ServerValue.TIMESTAMP).addOnSuccessListener(new OnSuccessListener<Void>() {
                                                     @Override
-                                                    public void onSuccess(Void aVoid)
-                                                    {
+                                                    public void onSuccess(Void aVoid) {
                                                         Intent chatIntent = new Intent(getContext(), ChatActivity.class);
                                                         chatIntent.putExtra("visit_user_id", list_user_id);
                                                         chatIntent.putExtra("user_name", userName);
@@ -187,8 +164,6 @@ public class FriendsFragment extends Fragment
 
                             }
                         });
-
-
                     }
 
                     @Override
@@ -202,10 +177,7 @@ public class FriendsFragment extends Fragment
         mFriendsList.setAdapter(firebaseRecyclerAdapter);
     }
 
-
-
-    public static class FriendsViewHolder extends RecyclerView.ViewHolder
-    {
+    public static class FriendsViewHolder extends RecyclerView.ViewHolder {
         View mView;
 
         public FriendsViewHolder(View itemView) {
@@ -214,21 +186,18 @@ public class FriendsFragment extends Fragment
             mView = itemView;
         }
 
-        public void setDate(String date)
-        {
+        public void setDate(String date) {
             TextView sinceFriendDate = (TextView) mView.findViewById(R.id.all_users_status);
             sinceFriendDate.setText("Berteman sejak : \n" + date);
         }
 
-        public void setUserName(String userName)
-        {
+        public void setUserName(String userName) {
             TextView userNameDisplay = (TextView) mView.findViewById(R.id.all_users_username);
             userNameDisplay.setText(userName);
         }
 
 
-        public void setUserThumbImage(final Context ctx, final String userThumbImage)
-        {
+        public void setUserThumbImage(final Context ctx, final String userThumbImage) {
             final CircleImageView thumb_image = (CircleImageView) mView.findViewById(R.id.all_users_profile_image);
 
             // load images offline
@@ -248,18 +217,14 @@ public class FriendsFragment extends Fragment
                     });
         }
 
-        public void setUserOnline(String online_status)
-        {
+        public void setUserOnline(String online_status) {
             ImageView onlineStatusView = (ImageView) mView.findViewById(R.id.online_status);
 
             // cek value online_status yg didapat dari database
             // jika true berarti user itu online
-            if(online_status.equals("true"))
-            {
+            if (online_status.equals("true")) {
                 onlineStatusView.setVisibility(View.VISIBLE);
-            }
-            else
-            {
+            } else {
                 onlineStatusView.setVisibility(View.INVISIBLE);
             }
         }

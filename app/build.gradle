@@ -1,4 +1,5 @@
 apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
 apply plugin: 'com.google.gms.google-services'
 apply plugin: 'org.sonarqube'
 
@@ -33,8 +34,8 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar', '.so'])
     //noinspection GradleCompatible
     implementation 'com.android.support:appcompat-v7:26.1.0'
-    implementation 'com.android.support:design:26.1.0'
-    implementation 'com.android.support:support-v4:26.1.0'
+    implementation 'com.android.support:design:28.0.0'
+    implementation 'com.android.support:support-v4:28.0.0'
     implementation 'com.android.support.constraint:constraint-layout:2.0.4'
     implementation 'com.google.firebase:firebase-auth:21.0.3'
     implementation 'com.google.firebase:firebase-database:20.0.4'
@@ -52,6 +53,7 @@ dependencies {
     implementation files('libs/ecdh-curve25519.jar')
 
     implementation 'com.google.firebase:firebase-analytics'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 }
 
 configurations.all {
@@ -67,4 +69,7 @@ configurations.all {
             details.useVersion '11.8.0'
         }
     }
+}
+repositories {
+    mavenCentral()
 }

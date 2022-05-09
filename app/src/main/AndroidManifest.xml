@@ -21,7 +21,7 @@
             </intent-filter>
         </service>
 
-        <activity android:name=".WelcomeActivity">
+        <activity android:name=".view.splashscreen.WelcomeActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -29,29 +29,29 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".MainActivity" />
+        <activity android:name=".view.main.MainActivity" />
 
-        <activity android:name=".StartPageActivity" />
-
-        <activity
-            android:name=".LoginActivity"
-            android:parentActivityName=".StartPageActivity" />
+        <activity android:name=".view.startpage.StartPageActivity" />
 
         <activity
-            android:name=".RegisterActivity"
-            android:parentActivityName=".StartPageActivity" />
+            android:name=".view.login.LoginActivity"
+            android:parentActivityName=".view.startpage.StartPageActivity" />
 
-        <activity android:name=".SettingsActivity" />
+        <activity
+            android:name=".view.register.RegisterActivity"
+            android:parentActivityName=".view.startpage.StartPageActivity" />
+
+        <activity android:name=".view.setting.SettingsActivity" />
 
         <activity
             android:name="com.theartofdev.edmodo.cropper.CropImageActivity"
             android:theme="@style/Base.Theme.AppCompat" />
         <activity
-            android:name=".StatusActivity"
-            android:parentActivityName=".SettingsActivity" />
+            android:name=".view.setting.StatusActivity"
+            android:parentActivityName=".view.setting.SettingsActivity" />
 
         <activity
-            android:name=".ProfileActivity"
+            android:name=".view.profile.ProfileActivity"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.example.andre.cchat_TARGET_NOTIFICATION"></action>
@@ -60,13 +60,13 @@
         </activity>
 
         <activity
-            android:name=".AllUsersActivity"
-            android:parentActivityName=".MainActivity" />
+            android:name=".view.allusers.AllUsersActivity"
+            android:parentActivityName=".view.main.MainActivity" />
 
         <activity
-            android:name=".ChatActivity"
+            android:name=".view.chat.ChatActivity"
             android:exported="false"
-            android:parentActivityName=".MainActivity"
+            android:parentActivityName=".view.main.MainActivity"
             android:windowSoftInputMode="adjustPan">
             <intent-filter>
                 <action android:name="com.example.andre.cchat_TARGET_NOTIFICATION_MESSAGE" />

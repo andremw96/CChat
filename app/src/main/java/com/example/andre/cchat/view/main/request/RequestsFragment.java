@@ -1,10 +1,7 @@
-package com.example.andre.cchat;
+package com.example.andre.cchat.view.main.request;
 
 
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
@@ -17,6 +14,8 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.andre.cchat.R;
+import com.example.andre.cchat.model.Requests;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -26,7 +25,6 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ServerValue;
 import com.google.firebase.database.ValueEventListener;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.NetworkPolicy;
@@ -61,11 +59,9 @@ public class RequestsFragment extends Fragment {
         // Required empty public constructor
     }
 
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState)
-    {
+                             Bundle savedInstanceState) {
         mMainView = inflater.inflate(R.layout.fragment_requests, container, false);
 
         mAuth = FirebaseAuth.getInstance();
@@ -89,13 +85,9 @@ public class RequestsFragment extends Fragment {
 
         mRequestsList.setLayoutManager(linearLayoutManager);
 
-
-
-
         // Inflate the layout for this fragment
         return mMainView;
     }
-
 
 
     @Override

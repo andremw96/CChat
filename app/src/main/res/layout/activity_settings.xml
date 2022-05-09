@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/colorPrimary"
-    tools:context="com.example.andre.cchat.SettingsActivity">
+    tools:context="com.example.andre.cchat.view.setting.SettingsActivity">
 
     <de.hdodenhof.circleimageview.CircleImageView
         android:id="@+id/settings_profile_image"
