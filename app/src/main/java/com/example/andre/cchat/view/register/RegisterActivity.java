@@ -2,24 +2,18 @@ package com.example.andre.cchat.view.register;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
-import android.support.annotation.NonNull;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-// import android.widget.Toolbar;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
 import com.example.andre.cchat.R;
 import com.example.andre.cchat.view.main.MainActivity;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
@@ -55,15 +49,11 @@ public class RegisterActivity extends AppCompatActivity {
     private FirebaseAuth mAuth;
     private DatabaseReference storeUserDefaultDataReference; // mengambil route database di firebase
 
-    private Toolbar mToolbar;
     private ProgressDialog loadingBar;
 
     private EditText registerUserName;
     private EditText registerUserEmail;
     private EditText registerUserPassword;
-    private EditText registerUserPrivateKey;
-    private Button generatePrivateKeyButton;
-    private Button buatAkunButton;
 
     String your_public_key_str;
     String encrypted_private_key;
@@ -78,7 +68,7 @@ public class RegisterActivity extends AppCompatActivity {
 
         mAuth = FirebaseAuth.getInstance();
 
-        mToolbar = (Toolbar) findViewById(R.id.register_toolbar);
+        Toolbar mToolbar = (Toolbar) findViewById(R.id.register_toolbar);
         setSupportActionBar(mToolbar);
         getSupportActionBar().setTitle("Sign Up");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -86,71 +76,54 @@ public class RegisterActivity extends AppCompatActivity {
         registerUserName = (EditText) findViewById(R.id.register_name);
         registerUserEmail = (EditText) findViewById(R.id.register_email);
         registerUserPassword = (EditText) findViewById(R.id.register_password);
-        registerUserPrivateKey = (EditText) findViewById(R.id.register_private_key);
-        generatePrivateKeyButton = (Button) findViewById(R.id.generate_key_button);
-        buatAkunButton = (Button) findViewById(R.id.buat_akun_button);
+        Button buatAkunButton = (Button) findViewById(R.id.buat_akun_button);
         loadingBar = new ProgressDialog(this);
 
-       /* generatePrivateKeyButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
 
+        buatAkunButton.setOnClickListener(view -> {
+            // memunuclkan loadingbar
+            loadingBar.setTitle("Akun baru sedang dibuat");
+            loadingBar.setMessage("Silahkan Tunggu, ketika akun sedang dibuat");
+            loadingBar.show();
+
+            final String name = registerUserName.getText().toString();
+            email = registerUserEmail.getText().toString();
+            final String pwd = registerUserPassword.getText().toString();
+
+            if (TextUtils.isEmpty(name)) {
+                Toast.makeText(RegisterActivity.this, "Masukkan nama anda.", Toast.LENGTH_LONG).show();
             }
-        });*/
 
-        buatAkunButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view)
-            {
-                // memunuclkan loadingbar
-                loadingBar.setTitle("Akun baru sedang dibuat");
-                loadingBar.setMessage("Silahkan Tunggu, ketika akun sedang dibuat");
-                loadingBar.show();
-
-                final String name = registerUserName.getText().toString();
-                email = registerUserEmail.getText().toString();
-                final String pwd = registerUserPassword.getText().toString();
-
-                if(TextUtils.isEmpty(name))
-                {
-                    Toast.makeText(RegisterActivity.this, "Masukkan nama anda.", Toast.LENGTH_LONG).show();
-                }
-
-                if(TextUtils.isEmpty(email))
-                {
-                    Toast.makeText(RegisterActivity.this, "Masukkan email anda.", Toast.LENGTH_LONG).show();
-                }
-
-                if(TextUtils.isEmpty(pwd))
-                {
-                    Toast.makeText(RegisterActivity.this, "Masukkan password anda.", Toast.LENGTH_LONG).show();
-                }
-                else
-                {
-                    try {
-                        generateUserKey();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-
-                    final String public_key = your_public_key_str;
-                    final String encrypted_priv_key = encrypted_private_key;
-
-                    Log.d("public key", public_key);
-                    Log.d("encrypted priv key", encrypted_priv_key);
-
-
-                    try {
-                        DaftarkanAkun(name, email, pwd, public_key, encrypted_priv_key);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-
-                // dissmiss loading bar
-                loadingBar.dismiss();
-
+            if (TextUtils.isEmpty(email)) {
+                Toast.makeText(RegisterActivity.this, "Masukkan email anda.", Toast.LENGTH_LONG).show();
             }
+
+            if (TextUtils.isEmpty(pwd)) {
+                Toast.makeText(RegisterActivity.this, "Masukkan password anda.", Toast.LENGTH_LONG).show();
+            } else {
+                try {
+                    generateUserKey();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                final String public_key = your_public_key_str;
+                final String encrypted_priv_key = encrypted_private_key;
+
+                Log.d("public key", public_key);
+                Log.d("encrypted priv key", encrypted_priv_key);
+
+
+                try {
+                    DaftarkanAkun(name, email, pwd, public_key, encrypted_priv_key);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+            // dissmiss loading bar
+            loadingBar.dismiss();
+
         });
 
     }
@@ -181,7 +154,6 @@ public class RegisterActivity extends AppCompatActivity {
         Log.d("kunci prviat sdh enkrip", encrypted_private_key);
 
         //registerUserPrivateKey.setText(encrypted_private_key);
-
         //end
         long lEndTime = System.nanoTime();
 
@@ -194,86 +166,67 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
 
-    private void DaftarkanAkun(final String name, String email, String pwd, final String public_key, final String encrypted_priv_key) throws Exception
-    {
+    private void DaftarkanAkun(final String name, String email, String pwd, final String public_key, final String encrypted_priv_key) throws Exception {
         // validasi mengecek apakaah field kosong atau tidak
-        if(TextUtils.isEmpty(name))
-        {
+        if (TextUtils.isEmpty(name)) {
             Toast.makeText(RegisterActivity.this, "Masukkan nama anda.", Toast.LENGTH_LONG).show();
         }
 
-        if(TextUtils.isEmpty(email))
-        {
+        if (TextUtils.isEmpty(email)) {
             Toast.makeText(RegisterActivity.this, "Masukkan email anda.", Toast.LENGTH_LONG).show();
         }
 
-        if(TextUtils.isEmpty(pwd))
-        {
+        if (TextUtils.isEmpty(pwd)) {
             Toast.makeText(RegisterActivity.this, "Masukkan password anda.", Toast.LENGTH_LONG).show();
         }
 
-        if(TextUtils.isEmpty(public_key))
-        {
+        if (TextUtils.isEmpty(public_key)) {
             Toast.makeText(RegisterActivity.this, "Ada Kesalahan, Mohon Coba Lagi.... ", Toast.LENGTH_LONG).show();
         }
 
-        if(TextUtils.isEmpty(encrypted_priv_key))
-        {
+        if (TextUtils.isEmpty(encrypted_priv_key)) {
             Toast.makeText(RegisterActivity.this, "Ada Kesalahan, Mohon Coba Lagi Lagi.... ", Toast.LENGTH_LONG).show();
-        }
-
-        else
-        {
+        } else {
 
             // script untuk memasukkan data  email dan password ke firebase
-            mAuth.createUserWithEmailAndPassword(email, pwd).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
-                @Override
-                public void onComplete(@NonNull Task<AuthResult> task) {
-                    // jika berhasil menyimpan maka, user akan dialihkan ke main
-                    if(task.isSuccessful())
-                    {
-                        String device_token = FirebaseInstanceId.getInstance().getToken();
+            mAuth.createUserWithEmailAndPassword(email, pwd).addOnCompleteListener(task -> {
+                // jika berhasil menyimpan maka, user akan dialihkan ke main
+                if (task.isSuccessful()) {
+                    String device_token = FirebaseInstanceId.getInstance().getToken();
 
-                        String current_user_id = mAuth.getCurrentUser().getUid();
-                        // create reference and store the reference inside variable, reference to firebase database
-                        storeUserDefaultDataReference = FirebaseDatabase.getInstance().getReference().child("Users").child(current_user_id);
+                    String current_user_id = mAuth.getCurrentUser().getUid();
+                    // create reference and store the reference inside variable, reference to firebase database
+                    storeUserDefaultDataReference = FirebaseDatabase.getInstance().getReference().child("Users").child(current_user_id);
 
-                        storeUserDefaultDataReference.child("user_name").setValue(name);
-                        storeUserDefaultDataReference.child("user_name_lowercase").setValue(name.toLowerCase());
-                        storeUserDefaultDataReference.child("user_public_key").setValue(public_key);
-                        storeUserDefaultDataReference.child("user_private_key").setValue(encrypted_priv_key);
-                        storeUserDefaultDataReference.child("user_status").setValue("Hello World, I am using CChat");
-                        storeUserDefaultDataReference.child("user_image").setValue("default_profile");
-                        storeUserDefaultDataReference.child("device_token").setValue(device_token);
-                        storeUserDefaultDataReference.child("user_thumb_image").setValue("default_image")
-                                .addOnCompleteListener(new OnCompleteListener<Void>() {
-                                    @Override
-                                    public void onComplete(@NonNull Task<Void> task)
-                                    {
-                                        if(task.isSuccessful())
-                                        {
-                                            Intent mainIntent = new Intent(RegisterActivity.this, MainActivity.class);
-                                            // validasi user tidak kembali setelah register activity
-                                            mainIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                                            startActivity(mainIntent);
-                                            finish();
-                                        }
-                                    }
-                                });
-                    }
-                    else
-                    {
-                        Toast.makeText(RegisterActivity.this, "Ada kesalahan, silahkan coba lagi", Toast.LENGTH_SHORT).show();
-                    }
+                    storeUserDefaultDataReference.child("user_name").setValue(name);
+                    storeUserDefaultDataReference.child("user_name_lowercase").setValue(name.toLowerCase());
+                    storeUserDefaultDataReference.child("user_public_key").setValue(public_key);
+                    storeUserDefaultDataReference.child("user_private_key").setValue(encrypted_priv_key);
+                    storeUserDefaultDataReference.child("user_status").setValue("Hello World, I am using CChat");
+                    storeUserDefaultDataReference.child("user_image").setValue("default_profile");
+                    storeUserDefaultDataReference.child("device_token").setValue(device_token);
+                    storeUserDefaultDataReference.child("user_thumb_image").setValue("default_image")
+                            .addOnCompleteListener(task1 -> {
+                                if (task1.isSuccessful()) {
+                                    Intent mainIntent = new Intent(RegisterActivity.this, MainActivity.class);
+                                    // validasi user tidak kembali setelah register activity
+                                    mainIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                    startActivity(mainIntent);
+                                    finish();
+                                }
+                            });
+                } else {
+                    Toast.makeText(RegisterActivity.this, "Ada kesalahan, silahkan coba lagi", Toast.LENGTH_SHORT).show();
                 }
             });
         }
     }
 
     private final static char[] hexArray = "0123456789ABCDEF".toCharArray();
+
     public static String bytesToHex(byte[] bytes) {
         char[] hexChars = new char[bytes.length * 2];
-        for ( int j = 0; j < bytes.length; j++ ) {
+        for (int j = 0; j < bytes.length; j++) {
             int v = bytes[j] & 0xFF;
             hexChars[j * 2] = hexArray[v >>> 4];
             hexChars[j * 2 + 1] = hexArray[v & 0x0F];
@@ -282,8 +235,7 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     // email sebagai kunci enkripsi
-    private String encrypt(String Data, String email) throws Exception
-    {
+    private String encrypt(String Data, String email) throws Exception {
         SecureRandom random = new SecureRandom();
         byte[] salt = new byte[16];
         random.nextBytes(salt);
@@ -309,13 +261,11 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
 
-    private SecretKeySpec generateKey(String password, byte[] salt) throws Exception
-    {
+    private SecretKeySpec generateKey(String password, byte[] salt) throws Exception {
         KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, 65536, 128);
         SecretKeyFactory f = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
         byte[] key = f.generateSecret(spec).getEncoded();
-        SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
 
-        return secretKeySpec;
+        return new SecretKeySpec(key, "AES");
     }
 }

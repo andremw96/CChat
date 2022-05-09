@@ -73,9 +73,13 @@ public class ChatsFragment extends Fragment {
         linearLayoutManager.setReverseLayout(true);
         linearLayoutManager.setStackFromEnd(true);
         myChatsList.setLayoutManager(linearLayoutManager);
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
 
         Query convQuery = convReference.orderByChild("timestamp");
-
         FirebaseRecyclerAdapter<Conv, ConvViewHolder> firebaseRecyclerAdapter = new ConversationAdapter(
                 convQuery,
                 messagesReference,

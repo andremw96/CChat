@@ -17,12 +17,8 @@ import com.squareup.picasso.Picasso;
  * Created by Wijaya_PC on 23-Jan-18.
  */
 
-public class CChat_Offline extends Application
-{
+public class CChat_Offline extends Application {
     private DatabaseReference UsersReference;
-    private FirebaseAuth mAuth;
-    private FirebaseUser currentUser;
-
 
     @Override
     public void onCreate() {
@@ -40,23 +36,20 @@ public class CChat_Offline extends Application
         Picasso.setSingletonInstance(built);
 
         // melihat user yg online
-        mAuth = FirebaseAuth.getInstance();
-        currentUser = mAuth.getCurrentUser();
+        FirebaseAuth mAuth = FirebaseAuth.getInstance();
+        FirebaseUser currentUser = mAuth.getCurrentUser();
 
         // jika usernya login ke akunnya or it means usernya online
-        if(currentUser != null)
-        {
+        if (currentUser != null) {
             String online_user_id = mAuth.getCurrentUser().getUid();
             // create new node on users, yg akan mengecek apakah user tersebut online atau tidak
             // dgn true / false
 
             UsersReference = FirebaseDatabase.getInstance().getReference().child("Users").child(online_user_id);
 
-            UsersReference.addValueEventListener(new ValueEventListener()
-            {
+            UsersReference.addValueEventListener(new ValueEventListener() {
                 @Override
-                public void onDataChange(DataSnapshot dataSnapshot)
-                {
+                public void onDataChange(DataSnapshot dataSnapshot) {
                     // jika user close app, maka aplikasi akan set node online ke false
                     UsersReference.child("online").onDisconnect().setValue(ServerValue.TIMESTAMP);
                 }

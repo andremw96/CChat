@@ -29,7 +29,7 @@ class ConversationAdapter(
                 viewHolder.setMessage(data, model!!.isSeen)
             }
 
-            override fun onChildChanged(dataSnapshot: DataSnapshot, s: String) {}
+            override fun onChildChanged(dataSnapshot: DataSnapshot, s: String?) {}
             override fun onChildRemoved(dataSnapshot: DataSnapshot) {}
             override fun onChildMoved(dataSnapshot: DataSnapshot, s: String) {}
             override fun onCancelled(databaseError: DatabaseError) {}
