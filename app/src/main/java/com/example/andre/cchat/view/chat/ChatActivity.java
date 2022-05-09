@@ -89,8 +89,8 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
     private DatabaseReference notificationsReference;
 
     private FirebaseAuth mAuth;
-    private static String messageSenderID;
-    private static String messageSenderEmail;
+    private String messageSenderID;
+    private String messageSenderEmail;
 
     private RecyclerView userMessagesList;
 
@@ -98,13 +98,17 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
 
     private MessagesAdapter messageAdapter;
 
-    private static final int Gallery_Pick = 1;
-    private StorageReference MessageImageStorageRef;
+    private static final int GALLERY_PICK = 1;
+    private StorageReference messageImageStorageRef;
 
     private ProgressDialog loadingBar;
 
     private String outputString;
-    private static final String aes = "AES/CBC/PKCS5Padding";
+    private static final String AES_CBC_PKCS_5_PADDING = "AES/CBC/PKCS5Padding";
+    private static final String USERS_STRING = "Users";
+    private static final String MESSAGES_STRING = "Messages";
+    private static final String TIMESTAMP_STRING = "timestamp";
+    private static final String SEEN_STRING = "seen";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -123,7 +127,7 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
         messageReceiverId = getIntent().getExtras().get("visit_user_id").toString();
         String messageReceiverName = getIntent().getExtras().get("user_name").toString();
 
-        MessageImageStorageRef = FirebaseStorage.getInstance().getReference().child("Messages_Pictures");
+        messageImageStorageRef = FirebaseStorage.getInstance().getReference().child("Messages_Pictures");
 
         loadingBar = new ProgressDialog(this);
 
@@ -138,10 +142,10 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
         LayoutInflater layoutInflater = (LayoutInflater)
                 this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
-        View action_bar_view = layoutInflater.inflate(R.layout.chat_custom_bar, null);
+        View actionBarView = layoutInflater.inflate(R.layout.chat_custom_bar, null);
 
         // connect action bar to custom view
-        actionBar.setCustomView(action_bar_view);
+        actionBar.setCustomView(actionBarView);
 
         // casting activitychat_xml atribute
         ImageButton sendMessageButton = (ImageButton) findViewById(R.id.chat_send_message_btn);
@@ -172,7 +176,7 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
         // ngambil nama dan ditampilin ke texxtview
         userNameTitle.setText(messageReceiverName);
 
-        rootRef.child("Users").child(messageReceiverId).addValueEventListener(new ValueEventListener() {
+        rootRef.child(USERS_STRING).child(messageReceiverId).addValueEventListener(new ValueEventListener() {
             @Override
             // retrieve user image & user last seen
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -182,13 +186,11 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
                 if (online.equals("true")) {
                     userLastSeen.setText("Online");
                 } else {
-                    LastSeenTime getTime = new LastSeenTime();
-
                     // convert data to long
-                    long last_seen = Long.parseLong(online);
+                    long lastSeen = Long.parseLong(online);
 
-                    if (last_seen != 0) {
-                        String lastSeenDisplayTime = LastSeenTime.getTimeAgo(last_seen, getApplicationContext());
+                    if (lastSeen != 0) {
+                        String lastSeenDisplayTime = LastSeenTime.getTimeAgo(lastSeen, getApplicationContext());
                         userLastSeen.setText(lastSeenDisplayTime);
                     } else {
                         userLastSeen.setText("Online");
@@ -200,9 +202,7 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
                         into(userChatProfileImage, new Callback() {
                             @Override
                             // onsuccess akan melload picture offline
-                            public void onSuccess() {
-
-                            }
+                            public void onSuccess() {}
 
                             @Override
                             // onEror berarti load ofline gagal, maka load gambar lgsg ke database
@@ -213,9 +213,7 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
             }
 
             @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
+            public void onCancelled(DatabaseError databaseError) { }
         });
 
         sendMessageButton.setOnClickListener(view -> kirimPesan());
@@ -232,12 +230,12 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
             Intent galleryIntent = new Intent();
             galleryIntent.setAction(Intent.ACTION_GET_CONTENT);
             galleryIntent.setType("image/*");
-            startActivityForResult(galleryIntent, Gallery_Pick);
+            startActivityForResult(galleryIntent, GALLERY_PICK);
         });
 
         fetchMessages();
 
-        DatabaseReference getUserDataReference = FirebaseDatabase.getInstance().getReference().child("Users").child(messageReceiverId);
+        DatabaseReference getUserDataReference = FirebaseDatabase.getInstance().getReference().child(USERS_STRING).child(messageReceiverId);
         getUserDataReference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -247,12 +245,10 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
             }
 
             @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
+            public void onCancelled(DatabaseError databaseError) { }
         });
 
-        DatabaseReference getUserDataReference2 = FirebaseDatabase.getInstance().getReference().child("Users").child(messageSenderID);
+        DatabaseReference getUserDataReference2 = FirebaseDatabase.getInstance().getReference().child(USERS_STRING).child(messageSenderID);
         getUserDataReference2.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -263,18 +259,13 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
                     String decryptPrivateKey = decryptPrivateKey(encryptedPrivateKey, messageSenderEmail);
 
                     tempPrivateKey.setText(decryptPrivateKey);
-                    Log.d("decrypted private key", decryptPrivateKey);
-                    // String tempPublicKeyString = tempPublicKey.getText().toString();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-
             }
 
             @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
+            public void onCancelled(DatabaseError databaseError) { }
         });
     }
 
@@ -306,10 +297,6 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
             final String inputPassword = editPwdUser.getText().toString(); //ini password user
             final String privateKey1 = editPrivateKey.getText().toString();//ini kunci private
 
-            Log.d("messageText", messageText1);
-            Log.d("inputPassword", inputPassword);
-            Log.d("private key", privateKey1);
-
             if (TextUtils.isEmpty(messageText1)) {
                 Toast.makeText(ChatActivity.this, "Silahkan Isi Pesan Anda", Toast.LENGTH_SHORT).show();
             }
@@ -332,7 +319,7 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
                                 //time elapsed
                                 long output = lEndTime - lStartTime;
 
-                                System.out.println("Waktu Enkripsi dalam milliseconds: " + output / 1000000);
+                                Log.d("Output", "Waktu Enkripsi dalam milliseconds: " + output / 1000000);
 
                                 inputMessageText.setText(outputString);
                             } catch (Exception e) {
@@ -352,31 +339,29 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
         });
 
         alert.setNegativeButton("Cancel", (dialog, whichButton) -> dialog.cancel());
-
         alert.show();
     }
-
 
     // buat gambar
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == Gallery_Pick && resultCode == RESULT_OK && data != null) {
+        if (requestCode == GALLERY_PICK && resultCode == RESULT_OK && data != null) {
             loadingBar.setTitle("Mengirim Gambar");
             loadingBar.setMessage("Mohon Tunggu, ketika gambar anda sedang dikirim ...");
             loadingBar.show();
 
-            Uri ImageUri = data.getData();
+            Uri imageUri = data.getData();
 
-            final String message_sender_ref = "Messages/" + messageSenderID + "/" + messageReceiverId;
-            final String message_receiver_ref = "Messages/" + messageReceiverId + "/" + messageSenderID;
+            final String messageSenderRef = MESSAGES_STRING + "/" + messageSenderID + "/" + messageReceiverId;
+            final String messageReceiverRef = MESSAGES_STRING + "/" + messageReceiverId + "/" + messageSenderID;
 
-            DatabaseReference message_key = rootRef.child("Messages").child(messageSenderID).child(messageReceiverId).push();
-            final String message_push_id = message_key.getKey();
+            DatabaseReference messageKey = rootRef.child(MESSAGES_STRING).child(messageSenderID).child(messageReceiverId).push();
+            final String messagePushId = messageKey.getKey();
 
-            StorageReference filePath = MessageImageStorageRef.child(message_push_id + ".jpg");
-            filePath.putFile(ImageUri).addOnCompleteListener(task -> {
+            StorageReference filePath = messageImageStorageRef.child(messagePushId + ".jpg");
+            filePath.putFile(imageUri).addOnCompleteListener(task -> {
                 if (task.isSuccessful()) {
                     // get url of the image from firebase storage for image
                     final String downloadUrl = task.getResult().getDownloadUrl().toString();
@@ -391,14 +376,14 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
                     messageTextBody.put("from", messageSenderID);
 
                     Map<String, Object> messageBodyDetails = new HashMap<>();
-                    messageBodyDetails.put(message_sender_ref + "/" + message_push_id, messageTextBody);
-                    messageBodyDetails.put(message_receiver_ref + "/" + message_push_id, messageTextBody);
+                    messageBodyDetails.put(messageSenderRef + "/" + messagePushId, messageTextBody);
+                    messageBodyDetails.put(messageReceiverRef + "/" + messagePushId, messageTextBody);
 
-                    rootRef.child("Chat").child(messageSenderID).child(messageReceiverId).child("seen").setValue(true);
-                    rootRef.child("Chat").child(messageSenderID).child(messageReceiverId).child("timestamp").setValue(ServerValue.TIMESTAMP);
+                    rootRef.child("Chat").child(messageSenderID).child(messageReceiverId).child(SEEN_STRING).setValue(true);
+                    rootRef.child("Chat").child(messageSenderID).child(messageReceiverId).child(TIMESTAMP_STRING).setValue(ServerValue.TIMESTAMP);
 
-                    rootRef.child("Chat").child(messageReceiverId).child(messageSenderID).child("seen").setValue(false);
-                    rootRef.child("Chat").child(messageReceiverId).child(messageSenderID).child("timestamp").setValue(ServerValue.TIMESTAMP);
+                    rootRef.child("Chat").child(messageReceiverId).child(messageSenderID).child(SEEN_STRING).setValue(false);
+                    rootRef.child("Chat").child(messageReceiverId).child(messageSenderID).child(TIMESTAMP_STRING).setValue(ServerValue.TIMESTAMP);
 
                     rootRef.updateChildren(messageBodyDetails, (databaseError, databaseReference) -> {
                         if (databaseError != null) {
@@ -425,7 +410,7 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
     private void fetchMessages() {
         // pertama akan load 10 pesan
         // terus jika di refresh oleh user maka mcurrent page berubah jadi 2 di oncreate, maka pesan jadi 20
-        rootRef.child("Messages").child(messageSenderID).child(messageReceiverId)
+        rootRef.child(MESSAGES_STRING).child(messageSenderID).child(messageReceiverId)
                 .addChildEventListener(new ChildEventListener() {
                     @Override
                     public void onChildAdded(DataSnapshot dataSnapshot, String s) {
@@ -436,29 +421,19 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
 
                         // ketika fetchmessage, halaman page lgsg ke paling bawah alias pesan terakhir
                         userMessagesList.scrollToPosition(messageList.size() - 1);
-
-                        // mRefreshLayoutList.setRefreshing(false);
                     }
 
                     @Override
-                    public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-
-                    }
+                    public void onChildChanged(DataSnapshot dataSnapshot, String s) { }
 
                     @Override
-                    public void onChildRemoved(DataSnapshot dataSnapshot) {
-
-                    }
+                    public void onChildRemoved(DataSnapshot dataSnapshot) { }
 
                     @Override
-                    public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-
-                    }
+                    public void onChildMoved(DataSnapshot dataSnapshot, String s) { }
 
                     @Override
-                    public void onCancelled(DatabaseError databaseError) {
-
-                    }
+                    public void onCancelled(DatabaseError databaseError) { }
                 });
     }
 
@@ -466,15 +441,15 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
         String messageText = inputMessageText.getText().toString();
 
         if (TextUtils.isEmpty(messageText)) {
-            Toast.makeText(ChatActivity.this, "Silahkan Isi Pesan Anda", Toast.LENGTH_SHORT).show();
+            Toast.makeText(ChatActivity.this, R.string.please_fill_message, Toast.LENGTH_SHORT).show();
         } else {
             // membuat reference ke database ( tabel )
-            String message_sender_ref = "Messages/" + messageSenderID + "/" + messageReceiverId;
-            String message_receiver_ref = "Messages/" + messageReceiverId + "/" + messageSenderID;
+            String messageSenderRef = MESSAGES_STRING + "/" + messageSenderID + "/" + messageReceiverId;
+            String messageReceiverRef = MESSAGES_STRING + "/" + messageReceiverId + "/" + messageSenderID;
 
             // membuat unique ID dari message
-            DatabaseReference message_key = rootRef.child("Messages").child(messageSenderID).child(messageReceiverId).push();
-            String message_push_id = message_key.getKey();
+            DatabaseReference messageKey = rootRef.child(MESSAGES_STRING).child(messageSenderID).child(messageReceiverId).push();
+            String messagePushId = messageKey.getKey();
 
             // store to database
             Map<String, Object> messageTextBody = new HashMap<>();
@@ -485,14 +460,14 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
             messageTextBody.put("from", messageSenderID);
 
             Map<String, Object> messageBodyDetails = new HashMap<>();
-            messageBodyDetails.put(message_sender_ref + "/" + message_push_id, messageTextBody);
-            messageBodyDetails.put(message_receiver_ref + "/" + message_push_id, messageTextBody);
+            messageBodyDetails.put(messageSenderRef + "/" + messagePushId, messageTextBody);
+            messageBodyDetails.put(messageReceiverRef + "/" + messagePushId, messageTextBody);
 
-            rootRef.child("Chat").child(messageSenderID).child(messageReceiverId).child("seen").setValue(true);
-            rootRef.child("Chat").child(messageSenderID).child(messageReceiverId).child("timestamp").setValue(ServerValue.TIMESTAMP);
+            rootRef.child("Chat").child(messageSenderID).child(messageReceiverId).child(SEEN_STRING).setValue(true);
+            rootRef.child("Chat").child(messageSenderID).child(messageReceiverId).child(TIMESTAMP_STRING).setValue(ServerValue.TIMESTAMP);
 
-            rootRef.child("Chat").child(messageReceiverId).child(messageSenderID).child("seen").setValue(false);
-            rootRef.child("Chat").child(messageReceiverId).child(messageSenderID).child("timestamp").setValue(ServerValue.TIMESTAMP);
+            rootRef.child("Chat").child(messageReceiverId).child(messageSenderID).child(SEEN_STRING).setValue(false);
+            rootRef.child("Chat").child(messageReceiverId).child(messageSenderID).child(TIMESTAMP_STRING).setValue(ServerValue.TIMESTAMP);
 
             // menyimpan data notifikasi ke firebase
             HashMap<String, String> notificationsData = new HashMap<String, String>();
@@ -506,9 +481,7 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
 
             rootRef.updateChildren(messageBodyDetails, (databaseError, databaseReference) -> {
                 if (databaseError != null) {
-
                     Log.d("Chat_Log", databaseError.getMessage());
-
                 }
             });
         }
@@ -520,7 +493,7 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
         random.nextBytes(salt);
 
         SecretKeySpec key = generateKey(password, salt);
-        Cipher c = Cipher.getInstance(aes);
+        Cipher c = Cipher.getInstance(AES_CBC_PKCS_5_PADDING);
         c.init(Cipher.ENCRYPT_MODE, key);
         AlgorithmParameters params = c.getParameters();
         byte[] iv = params.getParameterSpec(IvParameterSpec.class).getIV();
@@ -550,7 +523,7 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
         byte[] ct = Arrays.copyOfRange(decodeValue, 32, decodeValue.length);
 
         SecretKeySpec key = generateKey(password, salt);
-        Cipher c = Cipher.getInstance(aes);
+        Cipher c = Cipher.getInstance(AES_CBC_PKCS_5_PADDING);
 
         c.init(Cipher.DECRYPT_MODE, key, new IvParameterSpec(iv));
         byte[] plaintext = c.doFinal(ct);
@@ -626,7 +599,7 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
         byte[] ct = Arrays.copyOfRange(decodeValue, 32, decodeValue.length);
 
         SecretKeySpec key = generateKeyForPrivate(password, salt);
-        Cipher c = Cipher.getInstance(aes);
+        Cipher c = Cipher.getInstance(AES_CBC_PKCS_5_PADDING);
 
         c.init(Cipher.DECRYPT_MODE, key, new IvParameterSpec(iv));
         byte[] plaintext = c.doFinal(ct);
@@ -710,12 +683,8 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
             final String inputPassword = editPwdUser.getText().toString();
             final String privateKey1 = editKunciDekripsi.getText().toString();
 
-            Log.d("messageText", messageText);
-            Log.d("inputPassword", inputPassword);
-            Log.d("privateKey", privateKey1);
-
             if (TextUtils.isEmpty(messageText)) {
-                Toast.makeText(ChatActivity.this, "Silahkan Isi Pesan Anda", Toast.LENGTH_SHORT).show();
+                Toast.makeText(ChatActivity.this, R.string.please_fill_message, Toast.LENGTH_SHORT).show();
             }
             if (TextUtils.isEmpty(inputPassword)) {
                 Toast.makeText(ChatActivity.this, "Silahkan Isi Password Anda", Toast.LENGTH_SHORT).show();
