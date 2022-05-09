@@ -2,7 +2,6 @@ package com.example.andre.cchat.view.chat;
 
 import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -41,7 +40,6 @@ import com.google.firebase.database.ServerValue;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.NetworkPolicy;
 import com.squareup.picasso.Picasso;
@@ -79,24 +77,16 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
     }
 
     private static String messageReceiverId;
-    private String messageReceiverName;
 
-    private Toolbar chatToolbar;
-
-    private TextView userNameTitle;
     private TextView userLastSeen;
     private TextView tempPublicKey;
     private TextView tempPrivateKey;
     private CircleImageView userChatProfileImage;
 
-    private ImageButton sendMessageButton;
-    private ImageButton selectImageButton;
-
     private EditText inputMessageText;
 
     private DatabaseReference rootRef;
     private DatabaseReference notificationsReference;
-    private DatabaseReference usersReference;
 
     private FirebaseAuth mAuth;
     private static String messageSenderID;
@@ -106,8 +96,6 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
 
     private final List<Messages> messageList = new ArrayList<>();
 
-    private LinearLayoutManager linearLayoutManager;
-
     private MessagesAdapter messageAdapter;
 
     private static final int Gallery_Pick = 1;
@@ -116,9 +104,7 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
     private ProgressDialog loadingBar;
 
     private String outputString;
-    private String pesanTerenkripsi;
-    private final String AES = "AES/CBC/PKCS5Padding";
-
+    private static final String aes = "AES/CBC/PKCS5Padding";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -134,16 +120,14 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
         messageSenderID = mAuth.getCurrentUser().getUid();
         messageSenderEmail = mAuth.getCurrentUser().getEmail();
 
-        if ((getIntent().getExtras().get("visit_user_id").toString() != null) && (getIntent().getExtras().get("user_name").toString() != null)) {
-            messageReceiverId = getIntent().getExtras().get("visit_user_id").toString();
-            messageReceiverName = getIntent().getExtras().get("user_name").toString();
-        }
+        messageReceiverId = getIntent().getExtras().get("visit_user_id").toString();
+        String messageReceiverName = getIntent().getExtras().get("user_name").toString();
 
         MessageImageStorageRef = FirebaseStorage.getInstance().getReference().child("Messages_Pictures");
 
         loadingBar = new ProgressDialog(this);
 
-        chatToolbar = (Toolbar) findViewById(R.id.chat_bar_layout);
+        Toolbar chatToolbar = (Toolbar) findViewById(R.id.chat_bar_layout);
         setSupportActionBar(chatToolbar);
 
         ActionBar actionBar = getSupportActionBar();
@@ -160,15 +144,15 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
         actionBar.setCustomView(action_bar_view);
 
         // casting activitychat_xml atribute
-        sendMessageButton = (ImageButton) findViewById(R.id.chat_send_message_btn);
-        selectImageButton = (ImageButton) findViewById(R.id.chat_select_image_btn);
+        ImageButton sendMessageButton = (ImageButton) findViewById(R.id.chat_send_message_btn);
+        ImageButton selectImageButton = (ImageButton) findViewById(R.id.chat_select_image_btn);
         inputMessageText = (EditText) findViewById(R.id.chat_input_message);
         userMessagesList = (RecyclerView) findViewById(R.id.chat_message_list_user);
 
         messageAdapter = new MessagesAdapter(messageList, this, ChatActivity.this);
         messageAdapter.setClickListener(this);
 
-        linearLayoutManager = new LinearLayoutManager(this);
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         linearLayoutManager.setStackFromEnd(true);
         linearLayoutManager.setSmoothScrollbarEnabled(true);
         userMessagesList.setHasFixedSize(true);
@@ -176,9 +160,8 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
 
         userMessagesList.setAdapter(messageAdapter);
 
-
         // setting username, dll di custom bar layout sesuai dgn profil orang yg dipilih user
-        userNameTitle = (TextView) findViewById(R.id.custom_chat_profile_name);
+        TextView userNameTitle = (TextView) findViewById(R.id.custom_chat_profile_name);
         userLastSeen = (TextView) findViewById(R.id.custom_chat_user_last_seen);
         userChatProfileImage = (CircleImageView) findViewById(R.id.custom_chat_profile_image);
         tempPublicKey = (TextView) findViewById(R.id.textTempPublicKey);
@@ -203,11 +186,9 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
 
                     // convert data to long
                     long last_seen = Long.parseLong(online);
-                    System.out.printf("last_seen " + last_seen);
 
                     if (last_seen != 0) {
                         String lastSeenDisplayTime = LastSeenTime.getTimeAgo(last_seen, getApplicationContext());
-                        System.out.printf("lastSeenDisplayTime " + lastSeenDisplayTime);
                         userLastSeen.setText(lastSeenDisplayTime);
                     } else {
                         userLastSeen.setText("Online");
@@ -237,86 +218,32 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
             }
         });
 
-       /* rootRef.child("Chat").child(messageSenderID).addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
+        sendMessageButton.setOnClickListener(view -> kirimPesan());
 
-                if(!dataSnapshot.hasChild(messageReceiverId)){
+        sendMessageButton.setOnLongClickListener(view -> {
+            showUpdateDialog();
 
-                    Map chatAddMap = new HashMap();
-                    chatAddMap.put("seen", false);
-                    chatAddMap.put("timestamp", ServerValue.TIMESTAMP);
-
-                    Map chatUserMap = new HashMap();
-                    chatUserMap.put("Chat/" + messageSenderID + "/" + messageReceiverId, chatAddMap);
-                    chatUserMap.put("Chat/" + messageReceiverId + "/" + messageSenderID, chatAddMap);
-
-                    rootRef.updateChildren(chatUserMap, new DatabaseReference.CompletionListener() {
-                        @Override
-                        public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
-
-                            if(databaseError != null){
-
-                                Log.d("CHAT_LOG", databaseError.getMessage().toString());
-
-                            }
-
-                        }
-                    });
-
-                }
-
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });*/
-
-
-        sendMessageButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                kirimPesan();
-            }
-        });
-
-        sendMessageButton.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View view) {
-                showUpdateDialog();
-
-                return false;
-            }
+            return false;
         });
 
 
         // open gallery
-        selectImageButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent galleryIntent = new Intent();
-                galleryIntent.setAction(Intent.ACTION_GET_CONTENT);
-                galleryIntent.setType("image/*");
-                startActivityForResult(galleryIntent, Gallery_Pick);
-            }
+        selectImageButton.setOnClickListener(view -> {
+            Intent galleryIntent = new Intent();
+            galleryIntent.setAction(Intent.ACTION_GET_CONTENT);
+            galleryIntent.setType("image/*");
+            startActivityForResult(galleryIntent, Gallery_Pick);
         });
 
-        FetchMessages();
+        fetchMessages();
 
         DatabaseReference getUserDataReference = FirebaseDatabase.getInstance().getReference().child("Users").child(messageReceiverId);
         getUserDataReference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                String kunci_public_B_hexa = dataSnapshot.child("user_public_key").getValue().toString(); // kunci publik bentuknya HEXA
+                String kunciPublicBHexa = dataSnapshot.child("user_public_key").getValue().toString(); // kunci publik bentuknya HEXA
 
-                if (kunci_public_B_hexa != null) {
-                    tempPublicKey.setText(kunci_public_B_hexa);
-                    // String tempPublicKeyString = tempPublicKey.getText().toString();
-                } else {
-                    Toast.makeText(ChatActivity.this, "User tersebut tidak punya kunci publik, tidak bisa enkripsi pesan", Toast.LENGTH_SHORT).show();
-                }
+                tempPublicKey.setText(kunciPublicBHexa);
             }
 
             @Override
@@ -329,19 +256,15 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
         getUserDataReference2.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                String encryptedprivatekey = dataSnapshot.child("user_private_key").getValue().toString(); // kunci private bentuknya HEXA
-                Log.d("encrypted private key", encryptedprivatekey);
+                String encryptedPrivateKey = dataSnapshot.child("user_private_key").getValue().toString(); // kunci private bentuknya HEXA
+                Log.d("encrypted private key", encryptedPrivateKey);
 
                 try {
-                    String decryptedprivatekey = decryptPrivateKey(encryptedprivatekey, messageSenderEmail);
+                    String decryptPrivateKey = decryptPrivateKey(encryptedPrivateKey, messageSenderEmail);
 
-                    if (encryptedprivatekey != null) {
-                        tempPrivateKey.setText(decryptedprivatekey);
-                        Log.d("decrypted private key", decryptedprivatekey);
-                        // String tempPublicKeyString = tempPublicKey.getText().toString();
-                    } else {
-                        Toast.makeText(ChatActivity.this, "User tersebut tidak punya kunci publik, tidak bisa enkripsi pesan", Toast.LENGTH_SHORT).show();
-                    }
+                    tempPrivateKey.setText(decryptPrivateKey);
+                    Log.d("decrypted private key", decryptPrivateKey);
+                    // String tempPublicKeyString = tempPublicKey.getText().toString();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -354,140 +277,6 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
             }
         });
     }
-
-    /*
-    @Override
-    protected void onStart() {
-        super.onStart();
-
-        Query chatQuery = rootRef.child("Messages").child(messageSenderID).child(messageReceiverId);
-
-        final FirebaseRecyclerAdapter<Messages, MessageViewHolder> firebaseRecyclerAdapter
-                = new FirebaseRecyclerAdapter<Messages, MessageViewHolder>
-                (
-                        Messages.class,
-                        R.layout.messages_layout_users,
-                        MessageViewHolder.class,
-                        chatQuery
-                )
-        {
-            @Override
-            protected void populateViewHolder(final MessageViewHolder viewHolder, Messages model, int position)
-            {
-                viewHolder.setText(model.getMessage());
-                String messageSenderID = mAuth.getCurrentUser().getUid();
-
-                usersReference = FirebaseDatabase.getInstance().getReference().child("Users").child(messageSenderID);
-                usersReference.addValueEventListener(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        String userImage = dataSnapshot.child("user_thumb_image").getValue().toString();
-
-                        viewHolder.setUser_thumb_image(getApplicationContext(), userImage);
-                    }
-
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-
-                    }
-                });
-
-                pesanTerenkripsi = null;
-
-                String fromUserID = messageSenderID;
-                String fromMessageType = "text";
-
-
-                Log.d("tipe pesan", fromMessageType);
-                if(fromMessageType.equals("text"))
-                {
-                    //viewHolder.messagePicture.setVisibility(View.INVISIBLE);
-
-                    // jika kita login sebagai kita, maka layout yg tampil adalah ini,,,
-                    // which is background ijo, color black
-                    if(fromUserID.equals(messageSenderID))
-                    {
-                        viewHolder.mView.setBackgroundResource(R.drawable.message_text_background_two);
-                     //   viewHolder.setTextColor(Color.BLACK);
-                     //   viewHolder.setGravity(Gravity.RIGHT);
-
-                     //   viewHolder.
-
-                        //  holder.userProfileImage.setVisibility(View.INVISIBLE);
-
-                    }
-                    else
-                    {
-                        viewHolder.mView.setBackgroundResource(R.drawable.message_text_background);
-                       // viewHolder.mView.setTextColor(Color.WHITE);
-                       // viewHolder.mView.setGravity(Gravity.LEFT);
-                        // holder.userProfileImage.setVisibility(View.VISIBLE);
-                    }
-
-                   // viewHolder.messageText.setText(messages.getMessage());
-                }
-                else
-                {
-                   // viewHolder.messageText.setVisibility(View.INVISIBLE);
-                   // viewHolder.messageText.setPadding(0,0,0,0);
-
-                   // Picasso.with(viewHolder.userProfileImage.getContext()).load(messages.getMessage())
-                   //         .placeholder(R.drawable.default_profile).into(viewHolder.messagePicture);
-                }
-            }
-        };
-
-        userMessagesList.setAdapter(firebaseRecyclerAdapter);
-    }*/
-
-/*
-    // makiung view holder
-    public static class MessageViewHolder extends RecyclerView.ViewHolder
-    {
-        View mView;
-
-        public ImageView messagePicture;
-
-        public MessageViewHolder(View view)
-        {
-            super(view);
-
-            mView = view;
-
-            //messagePicture = (ImageView) view.findViewById(R.id.message_image_view);
-
-        }
-
-        public void setText(String message)
-        {
-            TextView messageText = (TextView) mView.findViewById(R.id.message_text);
-            messageText.setText(message);
-        }
-
-        public void  setUser_thumb_image(final Context ctx, final String user_thumb_image)
-        {
-            final CircleImageView thumb_image = (CircleImageView) mView.findViewById(R.id.messages_profile_image);
-
-            // load images offline
-            Picasso.with(ctx).load(user_thumb_image).networkPolicy(NetworkPolicy.OFFLINE).placeholder(R.drawable.default_profile).
-                    into(thumb_image, new Callback() {
-                        @Override
-                        // onsuccess akan melload picture offline
-                        public void onSuccess() {
-
-                        }
-
-                        @Override
-                        // onEror berarti load ofline gagal, maka load gambar lgsg ke database
-                        public void onError() {
-                            Picasso.with(ctx).load(user_thumb_image).placeholder(R.drawable.default_profile).into(thumb_image);
-                        }
-                    });
-        }
-
-
-    }*/
-
 
     private void showUpdateDialog() { // dialog enkripsi
         String messageText = inputMessageText.getText().toString();
@@ -512,66 +301,57 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
         editTextPesanEnkripsi.setText(messageText);
         editPrivateKey.setText(privateKey);
 
-        alert.setPositiveButton("ok", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) {
-                final String messageText = editTextPesanEnkripsi.getText().toString();
-                final String inputPassword = editPwdUser.getText().toString(); //ini password user
-                final String privateKey = editPrivateKey.getText().toString();//ini kunci private
+        alert.setPositiveButton("ok", (dialog, whichButton) -> {
+            final String messageText1 = editTextPesanEnkripsi.getText().toString();
+            final String inputPassword = editPwdUser.getText().toString(); //ini password user
+            final String privateKey1 = editPrivateKey.getText().toString();//ini kunci private
 
-                Log.d("messageText", messageText);
-                Log.d("inputPassword", inputPassword);
-                Log.d("private key", privateKey);
+            Log.d("messageText", messageText1);
+            Log.d("inputPassword", inputPassword);
+            Log.d("private key", privateKey1);
 
-                if (TextUtils.isEmpty(messageText)) {
-                    Toast.makeText(ChatActivity.this, "Silahkan Isi Pesan Anda", Toast.LENGTH_SHORT).show();
-                }
-                if (TextUtils.isEmpty(inputPassword)) {
-                    Toast.makeText(ChatActivity.this, "Silahkan Isi Password Anda", Toast.LENGTH_SHORT).show();
-                } else {
-                    try {
-                        mAuth.signInWithEmailAndPassword(messageSenderEmail, inputPassword).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
-                            @Override
-                            public void onComplete(@NonNull Task<AuthResult> task) {
-                                if (task.isSuccessful()) {
-                                    try {
-                                        //start
-                                        long lStartTime = System.nanoTime();
+            if (TextUtils.isEmpty(messageText1)) {
+                Toast.makeText(ChatActivity.this, "Silahkan Isi Pesan Anda", Toast.LENGTH_SHORT).show();
+            }
+            if (TextUtils.isEmpty(inputPassword)) {
+                Toast.makeText(ChatActivity.this, "Silahkan Isi Password Anda", Toast.LENGTH_SHORT).show();
+            } else {
+                try {
+                    mAuth.signInWithEmailAndPassword(messageSenderEmail, inputPassword).addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            try {
+                                //start
+                                long lStartTime = System.nanoTime();
 
-                                        //task
-                                        outputString = (encrypt(messageText, privateKey)).trim();
+                                //task
+                                outputString = (encrypt(messageText1, privateKey1)).trim();
 
-                                        //end
-                                        long lEndTime = System.nanoTime();
+                                //end
+                                long lEndTime = System.nanoTime();
 
-                                        //time elapsed
-                                        long output = lEndTime - lStartTime;
+                                //time elapsed
+                                long output = lEndTime - lStartTime;
 
-                                        System.out.println("Waktu Enkripsi dalam milliseconds: " + output / 1000000);
+                                System.out.println("Waktu Enkripsi dalam milliseconds: " + output / 1000000);
 
-                                        inputMessageText.setText(outputString);
-                                    } catch (Exception e) {
-                                        e.printStackTrace();
-                                    }
-                                } else {
-                                    Toast.makeText(ChatActivity.this, "password tidak dikenali, silahkan Cek kembali password anda",
-                                            Toast.LENGTH_SHORT).show();
-                                }
+                                inputMessageText.setText(outputString);
+                            } catch (Exception e) {
+                                e.printStackTrace();
                             }
-                        });
+                        } else {
+                            Toast.makeText(ChatActivity.this, "password tidak dikenali, silahkan Cek kembali password anda",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    });
 
-                        inputMessageText.setEnabled(false);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                    inputMessageText.setEnabled(false);
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
             }
         });
 
-        alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) {
-                dialog.cancel();
-            }
-        });
+        alert.setNegativeButton("Cancel", (dialog, whichButton) -> dialog.cancel());
 
         alert.show();
     }
@@ -596,65 +376,55 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
             final String message_push_id = message_key.getKey();
 
             StorageReference filePath = MessageImageStorageRef.child(message_push_id + ".jpg");
-            filePath.putFile(ImageUri).addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
-                @Override
-                public void onComplete(@NonNull final Task<UploadTask.TaskSnapshot> task) {
-                    if (task.isSuccessful()) {
-                        // get url of the image from firebase storage for image
-                        final String downloadUrl = task.getResult().getDownloadUrl().toString();
+            filePath.putFile(ImageUri).addOnCompleteListener(task -> {
+                if (task.isSuccessful()) {
+                    // get url of the image from firebase storage for image
+                    final String downloadUrl = task.getResult().getDownloadUrl().toString();
 
 
-                        // store to database
-                        Map messageTextBody = new HashMap();
-                        messageTextBody.put("message", downloadUrl);
-                        messageTextBody.put("seen", false);
-                        messageTextBody.put("type", "image");
-                        messageTextBody.put("time", ServerValue.TIMESTAMP);
-                        messageTextBody.put("from", messageSenderID);
+                    // store to database
+                    Map<String, Object> messageTextBody = new HashMap<>();
+                    messageTextBody.put("message", downloadUrl);
+                    messageTextBody.put("seen", false);
+                    messageTextBody.put("type", "image");
+                    messageTextBody.put("time", ServerValue.TIMESTAMP);
+                    messageTextBody.put("from", messageSenderID);
 
-                        Map messageBodyDetails = new HashMap();
-                        messageBodyDetails.put(message_sender_ref + "/" + message_push_id, messageTextBody);
-                        messageBodyDetails.put(message_receiver_ref + "/" + message_push_id, messageTextBody);
+                    Map<String, Object> messageBodyDetails = new HashMap<>();
+                    messageBodyDetails.put(message_sender_ref + "/" + message_push_id, messageTextBody);
+                    messageBodyDetails.put(message_receiver_ref + "/" + message_push_id, messageTextBody);
 
-                        rootRef.child("Chat").child(messageSenderID).child(messageReceiverId).child("seen").setValue(true);
-                        rootRef.child("Chat").child(messageSenderID).child(messageReceiverId).child("timestamp").setValue(ServerValue.TIMESTAMP);
+                    rootRef.child("Chat").child(messageSenderID).child(messageReceiverId).child("seen").setValue(true);
+                    rootRef.child("Chat").child(messageSenderID).child(messageReceiverId).child("timestamp").setValue(ServerValue.TIMESTAMP);
 
-                        rootRef.child("Chat").child(messageReceiverId).child(messageSenderID).child("seen").setValue(false);
-                        rootRef.child("Chat").child(messageReceiverId).child(messageSenderID).child("timestamp").setValue(ServerValue.TIMESTAMP);
+                    rootRef.child("Chat").child(messageReceiverId).child(messageSenderID).child("seen").setValue(false);
+                    rootRef.child("Chat").child(messageReceiverId).child(messageSenderID).child("timestamp").setValue(ServerValue.TIMESTAMP);
 
-                        rootRef.updateChildren(messageBodyDetails, new DatabaseReference.CompletionListener() {
-                            @Override
-                            public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
-                                if (databaseError != null) {
-                                    Log.d("Chat_Log", databaseError.getMessage());
-                                }
+                    rootRef.updateChildren(messageBodyDetails, (databaseError, databaseReference) -> {
+                        if (databaseError != null) {
+                            Log.d("Chat_Log", databaseError.getMessage());
+                        }
 
-                                inputMessageText.setText("");
-
-                                loadingBar.dismiss();
-                            }
-                        });
-
-                        Toast.makeText(ChatActivity.this, "Gambar telah terkirim", Toast.LENGTH_SHORT).show();
+                        inputMessageText.setText("");
 
                         loadingBar.dismiss();
-                    } else {
-                        Toast.makeText(ChatActivity.this, "Gambar gagal terkirim, Coba Lagi", Toast.LENGTH_SHORT).show();
-                        loadingBar.dismiss();
-                    }
+                    });
+
+                    Toast.makeText(ChatActivity.this, "Gambar telah terkirim", Toast.LENGTH_SHORT).show();
+
+                    loadingBar.dismiss();
+                } else {
+                    Toast.makeText(ChatActivity.this, "Gambar gagal terkirim, Coba Lagi", Toast.LENGTH_SHORT).show();
+                    loadingBar.dismiss();
                 }
             });
         }
     }
 
 
-    private void FetchMessages() {
-        //DatabaseReference messageRef = rootRef.child("Messages").child(messageSenderID).child(messageReceiverId);
-
+    private void fetchMessages() {
         // pertama akan load 10 pesan
         // terus jika di refresh oleh user maka mcurrent page berubah jadi 2 di oncreate, maka pesan jadi 20
-        // Query messageQuery = messageRef.limitToLast(mCurrentPage * TOTAL_ITEMS_TO_LOAD);
-
         rootRef.child("Messages").child(messageSenderID).child(messageReceiverId)
                 .addChildEventListener(new ChildEventListener() {
                     @Override
@@ -666,7 +436,6 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
 
                         // ketika fetchmessage, halaman page lgsg ke paling bawah alias pesan terakhir
                         userMessagesList.scrollToPosition(messageList.size() - 1);
-
 
                         // mRefreshLayoutList.setRefreshing(false);
                     }
@@ -708,14 +477,14 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
             String message_push_id = message_key.getKey();
 
             // store to database
-            Map messageTextBody = new HashMap();
+            Map<String, Object> messageTextBody = new HashMap<>();
             messageTextBody.put("message", messageText);
             messageTextBody.put("seen", false);
             messageTextBody.put("type", "text");
             messageTextBody.put("time", ServerValue.TIMESTAMP);
             messageTextBody.put("from", messageSenderID);
 
-            Map messageBodyDetails = new HashMap();
+            Map<String, Object> messageBodyDetails = new HashMap<>();
             messageBodyDetails.put(message_sender_ref + "/" + message_push_id, messageTextBody);
             messageBodyDetails.put(message_receiver_ref + "/" + message_push_id, messageTextBody);
 
@@ -735,14 +504,10 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
             inputMessageText.setText("");
             inputMessageText.setEnabled(true);
 
-            rootRef.updateChildren(messageBodyDetails, new DatabaseReference.CompletionListener() {
-                @Override
-                public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
-                    if (databaseError != null) {
+            rootRef.updateChildren(messageBodyDetails, (databaseError, databaseReference) -> {
+                if (databaseError != null) {
 
-                        Log.d("Chat_Log", databaseError.getMessage());
-
-                    }
+                    Log.d("Chat_Log", databaseError.getMessage());
 
                 }
             });
@@ -755,7 +520,7 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
         random.nextBytes(salt);
 
         SecretKeySpec key = generateKey(password, salt);
-        Cipher c = Cipher.getInstance(AES);
+        Cipher c = Cipher.getInstance(aes);
         c.init(Cipher.ENCRYPT_MODE, key);
         AlgorithmParameters params = c.getParameters();
         byte[] iv = params.getParameterSpec(IvParameterSpec.class).getIV();
@@ -785,7 +550,7 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
         byte[] ct = Arrays.copyOfRange(decodeValue, 32, decodeValue.length);
 
         SecretKeySpec key = generateKey(password, salt);
-        Cipher c = Cipher.getInstance(AES);
+        Cipher c = Cipher.getInstance(aes);
 
         c.init(Cipher.DECRYPT_MODE, key, new IvParameterSpec(iv));
         byte[] plaintext = c.doFinal(ct);
@@ -861,7 +626,7 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
         byte[] ct = Arrays.copyOfRange(decodeValue, 32, decodeValue.length);
 
         SecretKeySpec key = generateKeyForPrivate(password, salt);
-        Cipher c = Cipher.getInstance(AES);
+        Cipher c = Cipher.getInstance(aes);
 
         c.init(Cipher.DECRYPT_MODE, key, new IvParameterSpec(iv));
         byte[] plaintext = c.doFinal(ct);
@@ -916,7 +681,7 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
         Log.d(TAG, "You clicked on " + position);
 
         Messages messages = messageList.get(position);
-        pesanTerenkripsi = messages.getMessage();
+        String pesanTerenkripsi = messages.getMessage();
         String privateKey = tempPrivateKey.getText().toString();
         System.out.println(pesanTerenkripsi);
 
@@ -992,11 +757,7 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
             }
         });
 
-        alert.setPositiveButton("ok", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) {
-                dialog.cancel();
-            }
-        });
+        alert.setPositiveButton("ok", (dialog, whichButton) -> dialog.cancel());
 
         alert.show();
     }
