@@ -17,9 +17,6 @@ jobs:
           name: Jacoco Run Unit Tests
           command: ./gradlew testDebugUnitTest
       - run:
-          name: Jacoco Code Coverage Report
-          command: ./gradlew createDebugCoverageReport
-      - run:
           name: Analyze on SonarCloud
           command: ./gradlew sonarqube -Dsonar.host.url=https://sonarcloud.io
 
