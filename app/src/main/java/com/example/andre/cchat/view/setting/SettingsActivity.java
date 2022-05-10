@@ -43,13 +43,13 @@ public class SettingsActivity extends AppCompatActivity {
     private TextView settingsDisplayName;
     private TextView settingsDisplayStatus;
 
-    private final static int galleryPick = 1;
+    private static final int GALLERY_PICK = 1;
 
     private StorageReference storeProfileImageStorageRef;
     private DatabaseReference getUserDataReference;
     private FirebaseAuth mAuth;
 
-    Bitmap thumb_bitmap = null;
+    Bitmap thumbBitmap = null;
 
     private StorageReference thumbImageRef;
 
@@ -62,8 +62,8 @@ public class SettingsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_settings);
 
         mAuth = FirebaseAuth.getInstance();
-        String online_user_id = mAuth.getCurrentUser().getUid();
-        getUserDataReference = FirebaseDatabase.getInstance().getReference().child("Users").child(online_user_id);
+        String onlineUserId = mAuth.getCurrentUser().getUid();
+        getUserDataReference = FirebaseDatabase.getInstance().getReference().child("Users").child(onlineUserId);
         getUserDataReference.keepSynced(true);
 
         storeProfileImageStorageRef = FirebaseStorage.getInstance().getReference().child("Profile_Images");
@@ -85,7 +85,6 @@ public class SettingsActivity extends AppCompatActivity {
                 String name = dataSnapshot.child("user_name").getValue().toString();
                 String status = dataSnapshot.child("user_status").getValue().toString();
                 final String image = dataSnapshot.child("user_image").getValue().toString();
-                String thumbImage = dataSnapshot.child("user_thumb_image").getValue().toString();
 
                 settingsDisplayName.setText(name);
                 settingsDisplayStatus.setText(status);
@@ -96,7 +95,7 @@ public class SettingsActivity extends AppCompatActivity {
                         @Override
                         // offline image load success
                         public void onSuccess() {
-
+                            // NOT NEEDED FOR NOW
                         }
 
                         // offline image didnt load succes, so the image wil load from database
@@ -110,7 +109,7 @@ public class SettingsActivity extends AppCompatActivity {
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-
+                // NOT NEEDED FOR NOW
             }
         });
 
@@ -119,14 +118,14 @@ public class SettingsActivity extends AppCompatActivity {
             Intent galleryIntent = new Intent();
             galleryIntent.setAction(Intent.ACTION_GET_CONTENT);
             galleryIntent.setType("image/*");
-            startActivityForResult(galleryIntent, galleryPick);
+            startActivityForResult(galleryIntent, GALLERY_PICK);
         });
 
         settingsUbahStatusButton.setOnClickListener(view -> {
-            String old_status = settingsDisplayStatus.getText().toString();
+            String oldStatus = settingsDisplayStatus.getText().toString();
 
             Intent statusIntent = new Intent(SettingsActivity.this, StatusActivity.class);
-            statusIntent.putExtra("user_status", old_status);
+            statusIntent.putExtra("user_status", oldStatus);
             startActivity(statusIntent);
         });
     }
@@ -136,18 +135,16 @@ public class SettingsActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == galleryPick && resultCode == RESULT_OK && data != null) {
-            Uri ImageUri = data.getData();
-            CropImage.activity(ImageUri)
-                    .setGuidelines(CropImageView.Guidelines.ON)
-                    .setAspectRatio(1, 1)
-                    .start(this);
-        }
+        if (resultCode == RESULT_OK) {
+            if (requestCode == GALLERY_PICK) {
+                Uri imageUri = data.getData();
+                CropImage.activity(imageUri)
+                        .setGuidelines(CropImageView.Guidelines.ON)
+                        .setAspectRatio(1, 1)
+                        .start(this);
+            } else if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
+                CropImage.ActivityResult result = CropImage.getActivityResult(data);
 
-        if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
-            CropImage.ActivityResult result = CropImage.getActivityResult(data);
-
-            if (resultCode == RESULT_OK) {
                 loadingBar.setTitle("Mengubah Foto Profil");
                 loadingBar.setMessage("Silahkan tunggu, ketika aplikasi mengubah foto profil anda");
                 loadingBar.show();
@@ -156,30 +153,28 @@ public class SettingsActivity extends AppCompatActivity {
                 Uri resultUri = result.getUri();
 
                 // get original file in variable yg nantinya akan dikompres
-                File thumb_filePathUri = new File(resultUri.getPath());
+                File thumbFilePathUri = new File(resultUri.getPath());
 
                 try {
                     // convert picture to bitmap so we can store to firebase and compress it
-                    thumb_bitmap = new Compressor(this)
+                    thumbBitmap = new Compressor(this)
                             .setMaxWidth(200)
                             .setMaxHeight(200)
                             .setQuality(50)
-                            .compressToBitmap(thumb_filePathUri);
+                            .compressToBitmap(thumbFilePathUri);
                 } catch (IOException e) {
                     Log.e("error compress", e.getMessage());
                 }
 
                 ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                thumb_bitmap.compress(Bitmap.CompressFormat.JPEG, 50, byteArrayOutputStream);
+                thumbBitmap.compress(Bitmap.CompressFormat.JPEG, 50, byteArrayOutputStream);
                 // store compressed file to thumb byte
-                final byte[] thumb_byte = byteArrayOutputStream.toByteArray();
-
+                final byte[] thumbByte = byteArrayOutputStream.toByteArray();
 
                 String userID = mAuth.getCurrentUser().getUid();
                 StorageReference filePath = storeProfileImageStorageRef.child(userID + ".jpg");
 
-                final StorageReference thumb_filePath = thumbImageRef.child(userID + ".jpg");
-
+                final StorageReference thumbFilePath = thumbImageRef.child(userID + ".jpg");
 
                 filePath.putFile(resultUri).addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
@@ -191,24 +186,20 @@ public class SettingsActivity extends AppCompatActivity {
                         final String downloadUrl = task.getResult().getDownloadUrl().toString();
 
                         // upload compressed file image to firebase storage
-                        UploadTask uploadTask = thumb_filePath.putBytes(thumb_byte);
-                        uploadTask.addOnCompleteListener(thumb_task -> {
-                            String thumb_downloadUrl = thumb_task.getResult().getDownloadUrl().toString();
+                        UploadTask uploadTask = thumbFilePath.putBytes(thumbByte);
+                        uploadTask.addOnCompleteListener(thumbTask -> {
+                            String thumbDownloadUrl = thumbTask.getResult().getDownloadUrl().toString();
 
-                            if (task.isSuccessful()) {
-                                Map<String, Object> updateUserData = new HashMap<>();
-                                updateUserData.put("user_image", downloadUrl);
-                                updateUserData.put("user_thumb_image", thumb_downloadUrl);
+                            Map<String, Object> updateUserData = new HashMap<>();
+                            updateUserData.put("user_image", downloadUrl);
+                            updateUserData.put("user_thumb_image", thumbDownloadUrl);
 
-                                getUserDataReference.updateChildren(updateUserData).
-                                        addOnCompleteListener((OnCompleteListener<Void>) task1 -> {
-                                            Toast.makeText(SettingsActivity.this,
-                                                    "Foto Profil berhasil diunggah", Toast.LENGTH_SHORT).show();
-
-
-                                            loadingBar.dismiss();
-                                        });
-                            }
+                            getUserDataReference.updateChildren(updateUserData).
+                                    addOnCompleteListener((OnCompleteListener<Void>) task1 -> {
+                                        Toast.makeText(SettingsActivity.this,
+                                                "Foto Profil berhasil diunggah", Toast.LENGTH_SHORT).show();
+                                        loadingBar.dismiss();
+                                    });
                         });
                     } else {
                         Toast.makeText(SettingsActivity.this,
@@ -218,8 +209,6 @@ public class SettingsActivity extends AppCompatActivity {
                         loadingBar.dismiss();
                     }
                 });
-            } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
-                Exception error = result.getError();
             }
         }
     }
