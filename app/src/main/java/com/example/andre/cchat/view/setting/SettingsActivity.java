@@ -165,7 +165,7 @@ public class SettingsActivity extends AppCompatActivity {
                             .setQuality(50)
                             .compressToBitmap(thumb_filePathUri);
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    Toast.makeText(SettingsActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
                 }
 
                 ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
