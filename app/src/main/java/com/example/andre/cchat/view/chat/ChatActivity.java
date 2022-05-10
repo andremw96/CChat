@@ -690,35 +690,32 @@ public class ChatActivity extends AppCompatActivity implements MessagesAdapter.C
                 Toast.makeText(ChatActivity.this, "Silahkan Isi Password Anda", Toast.LENGTH_SHORT).show();
             } else {
                 try {
-                    mAuth.signInWithEmailAndPassword(messageSenderEmail, inputPassword).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
-                        @Override
-                        public void onComplete(@NonNull Task<AuthResult> task) {
-                            if (task.isSuccessful()) {
-                                try {
-                                    //start
-                                    long lStartTime = System.nanoTime();
+                    mAuth.signInWithEmailAndPassword(messageSenderEmail, inputPassword).addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            try {
+                                //start
+                                long lStartTime = System.nanoTime();
 
-                                    //task
-                                    outputString = decrypt(messageText, privateKey1);
-                                    txtPesanTerdekripsi.setText(outputString);
+                                //task
+                                outputString = decrypt(messageText, privateKey1);
+                                txtPesanTerdekripsi.setText(outputString);
 
-                                    //end
-                                    long lEndTime = System.nanoTime();
+                                //end
+                                long lEndTime = System.nanoTime();
 
-                                    //time elapsed
-                                    long output = lEndTime - lStartTime;
+                                //time elapsed
+                                long output = lEndTime - lStartTime;
 
-                                    System.out.println("Waktu Dekripsi dalam milliseconds: " + output / 1000000);
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                }
-                            } else {
-                                Toast.makeText(ChatActivity.this, "password tidak dikenali, silahkan Cek kembali password anda",
-                                        Toast.LENGTH_SHORT).show();
+                                System.out.println("Waktu Dekripsi dalam milliseconds: " + output / 1000000);
+                            } catch (Exception e) {
+                                e.printStackTrace();
                             }
-
-                            loadingBar.dismiss();
+                        } else {
+                            Toast.makeText(ChatActivity.this, "password tidak dikenali, silahkan Cek kembali password anda",
+                                    Toast.LENGTH_SHORT).show();
                         }
+
+                        loadingBar.dismiss();
                     });
                 } catch (Exception e) {
                     e.printStackTrace();

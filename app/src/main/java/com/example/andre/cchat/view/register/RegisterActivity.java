@@ -55,10 +55,8 @@ public class RegisterActivity extends AppCompatActivity {
     private EditText registerUserEmail;
     private EditText registerUserPassword;
 
-    String your_public_key_str;
-    String encrypted_private_key;
-
-    private final String AES = "AES/CBC/PKCS5Padding";
+    String yourPublicKeyStr;
+    String encryptedPrivateKey;
     String email;
 
     @Override
@@ -92,42 +90,35 @@ public class RegisterActivity extends AppCompatActivity {
 
             if (TextUtils.isEmpty(name)) {
                 Toast.makeText(RegisterActivity.this, "Masukkan nama anda.", Toast.LENGTH_LONG).show();
+                return;
             }
 
             if (TextUtils.isEmpty(email)) {
                 Toast.makeText(RegisterActivity.this, "Masukkan email anda.", Toast.LENGTH_LONG).show();
+                return;
             }
 
             if (TextUtils.isEmpty(pwd)) {
                 Toast.makeText(RegisterActivity.this, "Masukkan password anda.", Toast.LENGTH_LONG).show();
-            } else {
-                try {
-                    generateUserKey();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                return;
+            }
 
-                final String public_key = your_public_key_str;
-                final String encrypted_priv_key = encrypted_private_key;
+            try {
+                generateUserKey();
+                final String publicKey = yourPublicKeyStr;
+                final String encryptedPrivKey = encryptedPrivateKey;
+                Log.d("public key", publicKey);
+                Log.d("encrypted priv key", encryptedPrivKey);
 
-                Log.d("public key", public_key);
-                Log.d("encrypted priv key", encrypted_priv_key);
-
-
-                try {
-                    DaftarkanAkun(name, email, pwd, public_key, encrypted_priv_key);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                daftarkanAkun(name, email, pwd, publicKey, encryptedPrivKey);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
 
             // dissmiss loading bar
             loadingBar.dismiss();
-
         });
-
     }
-
 
     private void generateUserKey() throws Exception {
         //start
@@ -135,23 +126,21 @@ public class RegisterActivity extends AppCompatActivity {
 
         //task
         SecureRandom random = new SecureRandom();
-        byte[] your_private_key = ECDHCurve25519.generate_secret_key(random);
-        String your_private_key_str = bytesToHex(your_private_key);
+        byte[] yourPrivateKey = ECDHCurve25519.generate_secret_key(random);
+        String yourPrivateKeyStr = bytesToHex(yourPrivateKey);
 
         // Create Alice's public key.
-        byte[] your_public_key = ECDHCurve25519.generate_public_key(your_private_key);
-        your_public_key_str = bytesToHex(your_public_key);
+        byte[] yourPublicKey = ECDHCurve25519.generate_public_key(yourPrivateKey);
+        yourPublicKeyStr = bytesToHex(yourPublicKey);
 
         Log.d("emailnya", email);
 
-
         // enkripsi privatekey dgn AES
-        encrypted_private_key = encrypt(your_private_key_str, email);
+        encryptedPrivateKey = encrypt(yourPrivateKeyStr, email);
 
-
-        Log.d("kunci publiknya", your_public_key_str);
-        Log.d("kunci prviat sbm enkrip", your_private_key_str);
-        Log.d("kunci prviat sdh enkrip", encrypted_private_key);
+        Log.d("kunci publiknya", yourPublicKeyStr);
+        Log.d("kunci prviat sbm enkrip", yourPrivateKeyStr);
+        Log.d("kunci prviat sdh enkrip", encryptedPrivateKey);
 
         //registerUserPrivateKey.setText(encrypted_private_key);
         //end
@@ -166,7 +155,7 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
 
-    private void DaftarkanAkun(final String name, String email, String pwd, final String public_key, final String encrypted_priv_key) throws Exception {
+    private void daftarkanAkun(final String name, String email, String pwd, final String publicKey, final String encryptedPrivKey) throws Exception {
         // validasi mengecek apakaah field kosong atau tidak
         if (TextUtils.isEmpty(name)) {
             Toast.makeText(RegisterActivity.this, "Masukkan nama anda.", Toast.LENGTH_LONG).show();
@@ -180,11 +169,11 @@ public class RegisterActivity extends AppCompatActivity {
             Toast.makeText(RegisterActivity.this, "Masukkan password anda.", Toast.LENGTH_LONG).show();
         }
 
-        if (TextUtils.isEmpty(public_key)) {
+        if (TextUtils.isEmpty(publicKey)) {
             Toast.makeText(RegisterActivity.this, "Ada Kesalahan, Mohon Coba Lagi.... ", Toast.LENGTH_LONG).show();
         }
 
-        if (TextUtils.isEmpty(encrypted_priv_key)) {
+        if (TextUtils.isEmpty(encryptedPrivKey)) {
             Toast.makeText(RegisterActivity.this, "Ada Kesalahan, Mohon Coba Lagi Lagi.... ", Toast.LENGTH_LONG).show();
         } else {
 
@@ -192,19 +181,19 @@ public class RegisterActivity extends AppCompatActivity {
             mAuth.createUserWithEmailAndPassword(email, pwd).addOnCompleteListener(task -> {
                 // jika berhasil menyimpan maka, user akan dialihkan ke main
                 if (task.isSuccessful()) {
-                    String device_token = FirebaseInstanceId.getInstance().getToken();
+                    String deviceToken = FirebaseInstanceId.getInstance().getToken();
 
-                    String current_user_id = mAuth.getCurrentUser().getUid();
+                    String currentUserId = mAuth.getCurrentUser().getUid();
                     // create reference and store the reference inside variable, reference to firebase database
-                    storeUserDefaultDataReference = FirebaseDatabase.getInstance().getReference().child("Users").child(current_user_id);
+                    storeUserDefaultDataReference = FirebaseDatabase.getInstance().getReference().child("Users").child(currentUserId);
 
                     storeUserDefaultDataReference.child("user_name").setValue(name);
                     storeUserDefaultDataReference.child("user_name_lowercase").setValue(name.toLowerCase());
-                    storeUserDefaultDataReference.child("user_public_key").setValue(public_key);
-                    storeUserDefaultDataReference.child("user_private_key").setValue(encrypted_priv_key);
+                    storeUserDefaultDataReference.child("user_public_key").setValue(publicKey);
+                    storeUserDefaultDataReference.child("user_private_key").setValue(encryptedPrivKey);
                     storeUserDefaultDataReference.child("user_status").setValue("Hello World, I am using CChat");
                     storeUserDefaultDataReference.child("user_image").setValue("default_profile");
-                    storeUserDefaultDataReference.child("device_token").setValue(device_token);
+                    storeUserDefaultDataReference.child("device_token").setValue(deviceToken);
                     storeUserDefaultDataReference.child("user_thumb_image").setValue("default_image")
                             .addOnCompleteListener(task1 -> {
                                 if (task1.isSuccessful()) {
@@ -241,6 +230,7 @@ public class RegisterActivity extends AppCompatActivity {
         random.nextBytes(salt);
 
         SecretKeySpec key = generateKey(email, salt);
+        String AES = "AES/CBC/PKCS5Padding";
         Cipher c = Cipher.getInstance(AES);
         c.init(Cipher.ENCRYPT_MODE, key);
         AlgorithmParameters params = c.getParameters();
@@ -253,11 +243,8 @@ public class RegisterActivity extends AppCompatActivity {
         outputStream.write(iv);
         outputStream.write(encryptedText);
 
-
         //  byte[] encVal = c.doFinal(Data.getBytes());
-        String encryptedValue = Base64.encodeToString(outputStream.toByteArray(), Base64.DEFAULT);
-
-        return encryptedValue;
+        return Base64.encodeToString(outputStream.toByteArray(), Base64.DEFAULT);
     }
 
 
