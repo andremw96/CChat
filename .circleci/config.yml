@@ -26,9 +26,9 @@ jobs:
           destination: reports
       - store_test_results:
           path: app/build/test-results
-#
-#workflows:
-#  main:
-#    jobs:
-#      - build:
-#          context: SonarCloud
+
+workflows:
+  main:
+    jobs:
+      - build:
+          context: SonarCloud
