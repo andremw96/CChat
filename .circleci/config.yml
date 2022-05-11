@@ -1,23 +1,6 @@
 version: 2.1
-orbs:
-  sonarcloud: sonarsource/sonarcloud@1.0.3
-
-aliases:
-  - &working_directory ~/CChat
-
-executors:
-  android-executor:
-    docker:
-      - image: circleci/android:api-29
 
 jobs:
-  sonar-scan:
-    working_directory: *working_directory
-    executor: android-executor
-    resource_class: medium
-    steps:
-      - sonarcloud/scan
-
   build:
     docker:
       - image: circleci/android:api-29-node
@@ -47,5 +30,5 @@ jobs:
 workflows:
   main:
     jobs:
-      - sonar-scan:
+      - build:
           context: SonarCloud
