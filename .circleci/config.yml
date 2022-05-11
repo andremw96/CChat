@@ -5,6 +5,11 @@ orbs:
 aliases:
   - &working_directory ~/CChat
 
+executors:
+  android-executor:
+    docker:
+      - image: circleci/android:api-29
+
 jobs:
   sonar-scan:
     working_directory: *working_directory
