@@ -28,6 +28,8 @@ sonarqube {
         property "sonar.projectKey", "andremw96_CChat"
         property "sonar.organization", "andremw96"
         property "sonar.host.url", "https://sonarcloud.io"
+        property "sonar.coverage.jacoco.xmlReportPaths", "build/reports/jacoco/codeCoverageReport/codeCoverageReport.xml"
+        property "sonar.login", "7196af5e23a58bfb56714c254f47dcb62078c97e"
     }
 }
 
