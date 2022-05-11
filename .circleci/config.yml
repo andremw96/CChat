@@ -20,7 +20,7 @@ jobs:
           command: ./gradlew testDebugUnitTest
       - run:
           name: Analyze on SonarCloud
-          command: ./gradlew sonarqube -Dsonar.host.url=https://sonarcloud.io
+          command: ./gradlew build sonarqube
       - store_artifacts:
           path: app/build/reports
           destination: reports
