@@ -31,7 +31,6 @@ sonarqube {
         property "sonar.coverage.jacoco.xmlReportPaths", "build/reports/jacoco/codeCoverageReport/codeCoverageReport.xml"
         property "sonar.login", "7196af5e23a58bfb56714c254f47dcb62078c97e"
         property "sonar.java.source", "1.8"
-        property "sonar.java.binaries", "build/libs/xyz-0.0.1-SNAPSHOT.jar"
         property "sonar.java.coveragePlugin", "jacoco"
         property "sonar.tests", "src/test"
         property "sonar.java.test.binaries", "build/classes/java/test"
