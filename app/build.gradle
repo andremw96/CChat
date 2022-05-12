@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'com.google.gms.google-services'
 apply plugin: 'org.sonarqube'
-apply from: '../jacoco.gradle'
+apply plugin: "kover"
 
 android {
     compileSdkVersion 30
@@ -20,19 +20,36 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
-        debug {
-            testCoverageEnabled true
-        }
     }
+
+//    testOptions {
+//        unitTests.all {
+//            if (it.name == "testDebugUnitTest") {
+//                it.extensions.configure(kotlinx.kover.api.KoverTaskExtension::class) {
+//                    isDisabled = false
+//                    binaryReportFile.set(file("$buildDir/custom/debug-report.bin"))
+//                    includes = listOf("com.example.*")
+//                    excludes = listOf("androidTest.com.example.subpackage.*")
+//                }
+//            }
+//        }
+//    }
 }
+
+//kover {
+//    isDisabled = false                          // false to disable instrumentation of all test tasks in all modules
+//    coverageEngine.set(kotlinx.kover.api.CoverageEngine.INTELLIJ) // change instrumentation agent and reporter
+//    intellijEngineVersion.set('1.0.639')    // change version of IntelliJ agent and reporter
+//    jacocoEngineVersion.set('0.8.7')        // change version of JaCoCo agent and reporter
+//    generateReportOnCheck.set(true)         // false to do not execute `koverReport` task before `check` task
+//}
 
 sonarqube {
     properties {
         property "sonar.projectKey", "andremw96_CChat"
         property "sonar.organization", "andremw96"
         property "sonar.host.url", "https://sonarcloud.io"
-        property("sonar.coverage.jacoco.xmlReportPaths", "${project.buildDir}/reports/jacoco/jacocoTestReport/jacocoTestReport.xml")
-        property("sonar.jacoco.reportPath", "${project.buildDir}/outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec")
+        property("sonar.coverage.jacoco.xmlReportPaths", "${project.buildDir}/reports/kover/project-xml/report.xml")
         property "sonar.java.coveragePlugin", "jacoco"
         property "sonar.sources", "app"
     }

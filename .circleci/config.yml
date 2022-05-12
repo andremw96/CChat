@@ -16,8 +16,8 @@ jobs:
             - ~/.gradle
           key: jars-{{ checksum "build.gradle" }}-{{ checksum  "app/build.gradle" }}
       - run:
-          name: Jacoco Run Unit Tests
-          command: ./gradlew testDebugUnitTestCoverage
+          name: Kover Generate Code Coverage
+          command: ./gradlew koverReport
       - run:
           name: Analyze on SonarCloud
           command: ./gradlew build sonarqube
