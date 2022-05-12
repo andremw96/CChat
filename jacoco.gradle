@@ -1,6 +1,6 @@
 apply plugin: 'jacoco'
 jacoco {
-    toolVersion = "0.7.5.201505241946"
+    toolVersion = "0.8.7"
 }
 
 //android.testOptions {
@@ -44,12 +44,54 @@ project.afterEvaluate {
                 classDirectories.setFrom(
                         dir: "${project.buildDir}/intermediates/classes/${sourcePath}",
                         excludes: [
-                                '**/R.class',
-                                '**/R$*.class',
-                                '**/*$ViewInjector*.*',
-                                '**/*$ViewBinder*.*',
-                                '**/BuildConfig.*',
-                                '**/Manifest*.*'
+                            'android/databinding/**/*.class',
+                            '**/android/databinding/*Binding.class',
+                            '**/android/databinding/*',
+                            '**/androidx/databinding/*',
+                            '**/BR.*',
+                            // android
+                            '**/R.class',
+                            '**/R$*.class',
+                            '**/BuildConfig.*',
+                            '**/Manifest*.*',
+                            '**/*Test*.*',
+                            'android/**/*.*',
+                            // butterKnife
+                            '**/*$ViewInjector*.*',
+                            '**/*$ViewBinder*.*',
+                            // dagger
+                            '**/*_MembersInjector.class',
+                            '**/Dagger*Component.class',
+                            '**/Dagger*Component$Builder.class',
+                            '**/*Module_*Factory.class',
+                            '**/di/module/*',
+                            '**/*_Factory*.*',
+                            '**/*Module*.*',
+                            '**/*Dagger*.*',
+                            '**/*Hilt*.*',
+                            // kotlin
+                            '**/*MapperImpl*.*',
+                            '**/*$ViewInjector*.*',
+                            '**/*$ViewBinder*.*',
+                            '**/BuildConfig.*',
+                            '**/*Component*.*',
+                            '**/*BR*.*',
+                            '**/Manifest*.*',
+                            '**/*$Lambda$*.*',
+                            '**/*Companion*.*',
+                            '**/*Module*.*',
+                            '**/*Dagger*.*',
+                            '**/*Hilt*.*',
+                            '**/*MembersInjector*.*',
+                            '**/*_MembersInjector.class',
+                            '**/*_Factory*.*',
+                            '**/*_Provide*Factory*.*',
+                            '**/*Extensions*.*',
+                            // sealed and data classes
+                            '**/*$Result.*',
+                            '**/*$Result$*.*',
+                            // Android Instrumented Test
+                            '**/androidTest/**/*.*'
                         ]
                 )
                 def coverageSourceDirs = [

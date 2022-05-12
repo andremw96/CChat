@@ -32,6 +32,7 @@ sonarqube {
         property "sonar.organization", "andremw96"
         property "sonar.host.url", "https://sonarcloud.io"
         property("sonar.coverage.jacoco.xmlReportPaths", "${project.buildDir}/reports/jacoco/jacocoTestReport/jacocoTestReport.xml")
+        property("sonar.jacoco.reportPath", "${project.buildDir}/outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec")
         property "sonar.java.coveragePlugin", "jacoco"
         property "sonar.sources", "app"
     }
