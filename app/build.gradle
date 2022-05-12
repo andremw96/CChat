@@ -28,15 +28,27 @@ android {
 
 sonarqube {
     properties {
-        property "sonar.projectKey", "andremw96_CChat"
-        property "sonar.organization", "andremw96"
-        property "sonar.host.url", "https://sonarcloud.io"
-        property("sonar.coverage.jacoco.xmlReportPaths", "build/reports/jacoco/testDebugUnitTestCoverage.xml")
+        //property "sonar.projectKey", "andremw96_CChat"
+        //property "sonar.organization", "andremw96"
+       // property "sonar.host.url", "https://sonarcloud.io"
+        property("sonar.coverage.jacoco.xmlReportPaths", "build/reports/jacoco/test/jacocoTestReport.xml")
         property "sonar.java.source", "1.8"
         property "sonar.java.coveragePlugin", "jacoco"
         property "sonar.tests", "src/test"
     }
 }
+
+//test {
+//    useJUnitPlatform()
+//    finalizedBy jacocoTestReport
+//}
+//
+//jacocoTestReport {
+//    dependsOn test
+//    reports {
+//        xml.enabled(true)
+//    }
+//}
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar', '.so'])
