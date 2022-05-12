@@ -17,10 +17,10 @@ jobs:
           key: jars-{{ checksum "build.gradle" }}-{{ checksum  "app/build.gradle" }}
       - run:
           name: Jacoco Run Unit Tests
-          command: ./gradlew testDebugUnitTest
+          command: ./gradlew codeCoverageReport
       - run:
           name: Analyze on SonarCloud
-          command: ./gradlew build sonarqube
+          command: ./gradlew sonarqube -x test
       - store_artifacts:
           path: app/build/reports
           destination: reports
