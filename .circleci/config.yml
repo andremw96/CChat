@@ -18,9 +18,9 @@ jobs:
       - run:
           name: Kover Generate Code Coverage
           command: ./gradlew koverReport
-      - run:
-          name: Analyze on SonarCloud
-          command: ./gradlew build sonarqube
+#      - run:
+#          name: Analyze on SonarCloud
+#          command: ./gradlew build sonarqube
       - store_artifacts:
           path: app/build/reports
           destination: reports
