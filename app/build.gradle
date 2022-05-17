@@ -2,6 +2,7 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'com.google.gms.google-services'
 apply plugin: 'org.sonarqube'
+apply plugin: "kover"
 
 android {
     compileSdkVersion 30
@@ -22,11 +23,21 @@ android {
     }
 }
 
+//kover {
+//    isDisabled = false                          // false to disable instrumentation of all test tasks in all modules
+//    coverageEngine.set(kotlinx.kover.api.CoverageEngine.INTELLIJ) // change instrumentation agent and reporter
+//    intellijEngineVersion.set('1.0.639')    // change version of IntelliJ agent and reporter
+//    jacocoEngineVersion.set('0.8.7')        // change version of JaCoCo agent and reporter
+//    generateReportOnCheck.set(true)         // false to do not execute `koverReport` task before `check` task
+//}
+
 sonarqube {
     properties {
         property "sonar.projectKey", "andremw96_CChat"
         property "sonar.organization", "andremw96"
         property "sonar.host.url", "https://sonarcloud.io"
+        property("sonar.coverage.jacoco.xmlReportPaths", "${project.buildDir}/reports/kover/project-xml/report.xml")
+        property "sonar.java.coveragePlugin", "jacoco"
     }
 }
 
